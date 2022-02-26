@@ -59,6 +59,9 @@ void tree_test()
 	s.insert(std::make_pair<int, char>(48, 'g'));
 	s.insert(std::make_pair<int, char>(62, 'h'));
 	s.insert(std::make_pair<int, char>(54, 'f'));
+
+	std::cout << s.size() << std::endl;
+
 	for(auto& i : s)
 		std::cout << "key: " <<i.first << ", value: " << i.second << std::endl;
 	
