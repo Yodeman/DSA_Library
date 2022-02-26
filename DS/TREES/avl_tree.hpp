@@ -76,9 +76,11 @@ size_t AVLTree<Key,Value>::height(std::shared_ptr<AVLTree<Key,Value>::node_type>
 template<typename Key, typename Value>
 void AVLTree<Key,Value>::setHeight(std::shared_ptr<AVLTree<Key,Value>::node_type>& node)
 {
-	size_t left_child_height = height(node->left_child);
-	size_t right_child_height = height(node->right_child);
-	node->setHeight(1 + ((left_child_height > right_child_height) ? left_child_height : right_child_height));
+	if (node){
+		size_t left_child_height = height(node->left_child);
+		size_t right_child_height = height(node->right_child);
+		node->setHeight(1 + ((left_child_height > right_child_height) ? left_child_height : right_child_height));
+	}
 }
 
 // checks if a node is balanced i.e. the absolute difference of the
@@ -117,6 +119,7 @@ void AVLTree<Key,Value>::rebalance(std::shared_ptr<AVLTree<Key,Value>::node_type
 			setHeight(node_z);
 		}
 	}
+	root_node = node_z;
 }
 
 // restructures a sub-tree using the tri-node restructure method.
@@ -167,7 +170,7 @@ std::shared_ptr< typename AVLTree<Key,Value>::node_type> AVLTree<Key,Value>::res
 	a->parent = b;
 	c->parent = b;
 	a->left_child = T_0;
-	if (T_0)	T_0->parent = a;
+	if (T_0) T_0->parent = a;
 	a->right_child = T_1;
 	if (T_1) T_1->parent = a;
 	c->left_child = T_2;
