@@ -193,7 +193,7 @@ Iterator<std::shared_ptr<BSTNode<Key,Value>>> SearchTree<Key,Value>::begin(){
 
 template<typename Key, typename Value>
 Iterator<std::shared_ptr<BSTNode<Key,Value>>> SearchTree<Key,Value>::end(){
-	// the end iterator is points to the super root sentinel node. This is
+	// the end iterator points to the super root sentinel node. This is
 	// done inorder to avoid the subtle bug that might occure when the user
 	// attempts to increment an iterator pointing the the rightmost node in
 	// the tree.
