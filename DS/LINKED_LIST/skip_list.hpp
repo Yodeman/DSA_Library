@@ -28,6 +28,17 @@ class SkipList{
 		void insert(const T&);
 		std::unique_ptr<T> find(const T&);
 		void remove(const T&);
+
+		friend std::ostream& operator<<(std::ostream& os, const SkipList<T>& s)
+		{
+			auto n = s.heads[0];
+			while(n){
+				os << "value: " << n->value << ", level: "
+					<< (n->successors).size() << "\n";
+				n = n->successors[0];
+			}
+			return os;
+		}
 	private:
 		size_t sz;
 		size_t maxLevel = 0;
@@ -96,8 +107,9 @@ std::unique_ptr<T> SkipList<T>::find(const T& elem)
 template<std::totally_ordered T>
 void SkipList<T>::insert(const T& elem)
 {
-	//auto e = __skip_search(elem);
-	//if (e->value == elem) return;
+	auto e = __skip_search(elem);
+	if (e->value == elem) return;
+
 	size_t level = __random_level();	// new node level.
 	
 	std::shared_ptr<SkipListNode<T>> new_node = std::make_shared<SkipListNode<T>>(elem, level);
@@ -109,33 +121,40 @@ void SkipList<T>::insert(const T& elem)
 		maxLevel = level;
 	}
 
-	std::shared_ptr<SkipListNode<T>> x;
-	std::shared_ptr<SkipListNode<T>> z;
+	std::shared_ptr<SkipListNode<T>> node_before;
+	std::shared_ptr<SkipListNode<T>> node_after;
 	bool was_set = false; // checks if a new small node was set.
 
 	for(auto k= maxLevel; k > 0; --k) {
 		if (!was_set)
-			x = heads[k-1];
+			node_before = heads[k-1];
 		// Make the newly inserted level point to the new node
 		// if new level were inserted to the heads array.
-		if (!x) {
+		if (!node_before) {
 			heads[k-1] = new_node;
 		}
 		else {
-			z = x->successors[k-1];
-			if((z && (z->value >= elem)) or !z){
-				if (k <= level){
-					new_node->successors[k-1] = z;
-					x->successors[k-1] = new_node;
+			node_after = node_before->successors[k-1];
+			// If node_before is the immediate node at the current
+			// level in the heads array, check if it is greater
+			// than the new node's value, if new has that same
+			// level, then relink the nodes.
+			if (node_before && (node_before->value > elem)) {
+				if (k <= level && !was_set){
+					new_node->successors[k-1] = node_before;
+					heads[k-1] = new_node;
 				}
 			}
-			else{
-				x = z;
+			// moves the node_before to the node with the greatest
+			// value that is less than the new node's value.
+			while (node_after && (elem >= node_after->value)){
 				was_set = true;
-				if (k <= level){
-					new_node->successors[k-1] = z->successors[k-1];
-					z->successors[k-1] = new_node;
-				}					
+				node_before = node_after;
+				node_after = node_after->successors[k-1];
+			}
+			if (k <= level) {
+				new_node->successors[k-1] = node_after;
+				node_before->successors[k-1] = new_node;
 			}
 		}
 	}
@@ -167,6 +186,19 @@ void SkipList<T>::remove(const T& elem)
 			(y->successors[k-1]).reset();
 		}
 	}
+	--sz;
 	node.reset();
 }
+/*
+template<std::totally_ordered T>
+std::ostream& operator<<(std::ostream& os, const SkipList<T> s)
+{
+	auto n = s.heads[0];
+	while (n) {
+		os << n->value << " ";
+		n = n->successors[0];
+	}
+	return os;
+}
+*/
 #endif //MY_SKIP_LIST
