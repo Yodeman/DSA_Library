@@ -26,7 +26,7 @@ class SkipList{
 		bool is_empty() const noexcept { return sz==0; }
 		size_t max_level() const noexcept { return maxLevel; }
 		void insert(const T&);
-		T find(const T&);
+		std::unique_ptr<T> find(const T&);
 		void remove(const T&);
 	private:
 		size_t sz;
@@ -68,10 +68,10 @@ std::shared_ptr<SkipListNode<T>> SkipList<T>::__skip_search(const T& elem)
 	 * or equal to elem
 	*/
 	std::shared_ptr<SkipListNode<T>> e;
-	for(auto k=maxLevel; k >= 0; --k){
-		e = heads[k];
-		while ((e->successors[k]) && (elem >= e->successors[k]->value)){
-			e = e->successors[k];
+	for(auto k=maxLevel; k > 0; --k){
+		e = heads[k-1];
+		while ((e->successors[k-1]) && (elem >= e->successors[k-1]->value)){
+			e = e->successors[k-1];
 		}
 		--k;
 	}
@@ -79,14 +79,18 @@ std::shared_ptr<SkipListNode<T>> SkipList<T>::__skip_search(const T& elem)
 }
 
 template<std::totally_ordered T>
-T SkipList<T>::find(const T& elem)
+std::unique_ptr<T> SkipList<T>::find(const T& elem)
 {
-	T retvalue{};
-	if (sz==0) return retvalue;
+	/*
+	 * finds the given element in a skip list, if it exists, 
+	 * it returns a pointer to the node's value else,
+	 * returns a pointer to null.
+	*/
+	if (sz==0) return nullptr;
 	auto e = __skip_search(elem);
 	if (e->value == elem)
-		retvalue = e->value;
-	return retvalue;
+		return std::make_unique<T>(e->value);
+	return nullptr;
 }
 
 template<std::totally_ordered T>
@@ -142,7 +146,7 @@ template<std::totally_ordered T>
 void SkipList<T>::remove(const T& elem)
 {
 	if(sz==0) throw std::runtime_error("List is empty!!!");
-	auto& node = __skip_search(elem);
+	auto node = __skip_search(elem);
 	if (node->value != elem)
 		throw std::runtime_error("deletion of elem not in list!!!");
 	size_t level = (node->successors).size();
