@@ -25,20 +25,18 @@ class SkipList{
 		size_t size() const noexcept { return sz; }
 		bool is_empty() const noexcept { return sz==0; }
 		size_t max_level() const noexcept { return maxLevel; }
-		void insert(const T& elem);
-		std::shared_ptr<SkipListNode<T>> find(const T& elem);
-		void remove(const T& elem);
+		void insert(const T&);
+		T find(const T&);
+		void remove(const T&);
 	private:
 		size_t sz;
-		size_t maxLevel;
+		size_t maxLevel = 0;
 		// heads is an array of pointer to the first node in the
 		// corresponding level (array index).
 		std::vector<std::shared_ptr<SkipListNode<T>>> heads;
 		
-		std::mt19937 gen();
-		std::uniform_int_distribution<size_t> distribution(1);
 		size_t __random_level();
-		std::shared_ptr<SkipListNode<T>> __skip_search(const T& elem);
+		std::shared_ptr<SkipListNode<T>> __skip_search(const T&);
 };
 
 template<std::totally_ordered T>
@@ -51,8 +49,12 @@ size_t SkipList<T>::__random_level()
 	 * level if the returned value is even and stops if the
 	 * returned value is odd or max level is reached.
 	*/
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<size_t> distrib(1);
+
 	size_t level = 1;
-	while( (distribution(gen) % 2) == 0)
+	while( (distrib(gen) % 2) == 0)
 		++level;
 	return level;
 }
@@ -65,10 +67,10 @@ std::shared_ptr<SkipListNode<T>> SkipList<T>::__skip_search(const T& elem)
 	 * if found, else returns the largest elem that is less than
 	 * or equal to elem
 	*/
-	size_t k = maxLevel;
-	auto e = heads[k];
-	while(k >= 0){
-		while (elem >= e->successors[k]->value){
+	std::shared_ptr<SkipListNode<T>> e;
+	for(auto k=maxLevel; k >= 0; --k){
+		e = heads[k];
+		while ((e->successors[k]) && (elem >= e->successors[k]->value)){
 			e = e->successors[k];
 		}
 		--k;
@@ -77,24 +79,26 @@ std::shared_ptr<SkipListNode<T>> SkipList<T>::__skip_search(const T& elem)
 }
 
 template<std::totally_ordered T>
-std::shared_ptr<SkipListNode<T>> find(const T& elem)
+T SkipList<T>::find(const T& elem)
 {
-	if (sz==0) return nullptr;
+	T retvalue{};
+	if (sz==0) return retvalue;
 	auto e = __skip_search(elem);
 	if (e->value == elem)
-		return e;
-	return nullptr;
+		retvalue = e->value;
+	return retvalue;
 }
 
-template<std::total_ordered T>
+template<std::totally_ordered T>
 void SkipList<T>::insert(const T& elem)
 {
+	//auto e = __skip_search(elem);
+	//if (e->value == elem) return;
 	size_t level = __random_level();	// new node level.
 	
 	std::shared_ptr<SkipListNode<T>> new_node = std::make_shared<SkipListNode<T>>(elem, level);
 	// If level is greater than the current maximum level,
 	// insert new level to the head array.
-	--level;
 	if (level > maxLevel){
 		for (size_t i=level; i > maxLevel; --i)
 			heads.push_back(nullptr);
@@ -105,32 +109,33 @@ void SkipList<T>::insert(const T& elem)
 	std::shared_ptr<SkipListNode<T>> z;
 	bool was_set = false; // checks if a new small node was set.
 
-	for(auto k=maxLevel; k >= 0; --k) {
-		if (!was set)
-			x = heads[k];
+	for(auto k= maxLevel; k > 0; --k) {
+		if (!was_set)
+			x = heads[k-1];
 		// Make the newly inserted level point to the new node
 		// if new level were inserted to the heads array.
 		if (!x) {
-			heads[k] = new_node;
+			heads[k-1] = new_node;
 		}
 		else {
-			z = x->successors[k];
+			z = x->successors[k-1];
 			if((z && (z->value >= elem)) or !z){
 				if (k <= level){
-					new_node->successors[k] = z;
-					x->successors[k] = new_node;
+					new_node->successors[k-1] = z;
+					x->successors[k-1] = new_node;
 				}
 			}
 			else{
 				x = z;
 				was_set = true;
 				if (k <= level){
-					new_node->successors[k] = z->successors[k];
-					z->successors[k] = new_node;
+					new_node->successors[k-1] = z->successors[k-1];
+					z->successors[k-1] = new_node;
 				}					
 			}
 		}
 	}
+	++sz;
 }
 
 template<std::totally_ordered T>
@@ -140,22 +145,22 @@ void SkipList<T>::remove(const T& elem)
 	auto& node = __skip_search(elem);
 	if (node->value != elem)
 		throw std::runtime_error("deletion of elem not in list!!!");
-	size_t levels = (node->successors).size() - 1;
+	size_t level = (node->successors).size();
 
-	for (auto k = levels; k >= 0; --k){
-		auto x = heads[k];
-		auto y = x->successors[k];
+	for (auto k = level; k > 0; --k){
+		auto x = heads[k-1];
+		auto y = x->successors[k-1];
 		while(x) {
 			if (y && y->value < elem){
 				x = y;
-				y = x->successors[k];
+				y = x->successors[k-1];
 			}
 			else if (y && y->value >= elem)
-				break
+				break;
 		}
 		if (y->value == elem){
-			x->successors[k] = y->successors[k];
-			(y->successors[k]).reset();
+			x->successors[k-1] = y->successors[k-1];
+			(y->successors[k-1]).reset();
 		}
 	}
 	node.reset();
