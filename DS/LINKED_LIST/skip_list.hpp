@@ -35,7 +35,7 @@ class SkipList{
 				auto n = s.heads[i];
 				os << "level " << i+1 << std::endl;
 				while(n){
-					os << "\tvalue: " << n->value << ", level: "
+					os << "\tvalue: " << n->value << ", levels: "
 						<< (n->successors).size() << "\n";
 					n = n->successors[i];
 				}
