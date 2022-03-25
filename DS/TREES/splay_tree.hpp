@@ -201,6 +201,20 @@ typename SplayTree<Key,Value>::iterator SplayTree<Key,Value>::find(const Key& ke
 }
 
 template<std::totally_ordered Key, typename Value>
-t
+typename SplayTree<Key,Value>::iterator SplayTree<Key,Value>::begin()
+{
+	auto node = root_node;
+	while(node->left_child)
+		node = node->left_child;
+	SplayTree<Key,Value>::iterator iter(node);
+	return iter;
+}
+
+template<std::totally_ordered Key, typename Value>
+typename SplayTree<Key,Value>::iterator SplayTree<Key,Value>::end()
+{
+	SplayTree<Key,Value>::iterator iter(super_root_node);
+	return iter;
+}
 
 #endif //MY_SPLAY_TREE
