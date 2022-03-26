@@ -107,8 +107,57 @@ void SplayTree<Key,Value>::zig_zig(std::shared_ptr<SplayTree<Key,Value>::node_ty
 									std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x
 								)
 {
-	// subtree rooted at each grandparent, parent and node_x in inorder traversal.
+	// subtrees rooted at each grandparent, parent and node_x in inorder traversal.
 	std::shared_ptr<SplayTree<Key,Value>::node_type> T_0, T_1, T_2, T_3;
+	if (parent_node == grand_parent_node->left_child) {
+		T_0 = node_x->left_child;
+		T_1 = node_x->right_child;
+		T_2 = parent_node->right_child;
+		T_3 = grand_parent_node->right_child;
+	}
+	else {
+		T_0 = grand_parent_node->left_child;
+		T_1 = parent_node->left_child;
+		T_2 = node_x->left_child;
+		T_3 = node_x->right_child;
+	}
+	
+	// replace the grandparent with node_x
+	if (grand_parent_node == ((grand_parent_node->parent).lock())->left_child)
+		((grand_parent_node->parent).lock())->left_child = node_x;
+	else
+		((grand_parent_node->parent).lock())->right_child = node_x;
+	node_x->parent = (grand_parent_node->parent).lock();
+
+	// make the grandparent and parent the children of node_x and at right position.
+	if (node_x == parent_node->left_child) {
+		node_x->left_child = T_0;
+		if (T_0) T_0->parent = node_x;
+		node_x->right_child = parent_node;
+		parent_node->parent = node_x;
+		parent_node->left_child = T_1;
+		if (T_1) T_1->parent = parent_node;
+		parent_node->right_child = grand_parent_node;
+		grand_parent_node->parent = parent_node;
+		grand_parent_node->left_child = T_2;
+		if (T_2) T_2->parent = grand_parent_node;
+		grand_parent_node->right_child = T_3;
+		if (T_3) T_3->parent = grand_parent_node;
+	}
+	else {
+		node_x->left_child = parent_node;
+		parent_node->parent = node_x;
+		node_x->right_child = T_3;
+		if (T_3) T_3->parent = node_x;
+		parent_node->left_childe = grand_parent_node;
+		grand_parent_node->parent = parent_node;
+		parent_node->right_child = T_2;
+		if (T_2) T_2->parent = parent_node;
+		grand_parent_node->left_child = T_0;
+		if (T_0) T_0->parent = grand_parent_node;
+		grand_parent_node->right_child = T_1;
+		if (T_1) T_1->parent = grand_parent_node;
+	}
 }
 
 template<std::totally_ordered Key, typename Value>
@@ -117,7 +166,7 @@ void SplayTree<Key,Value>::zig_zag(std::shared_ptr<SplayTree<Key,Value>::node_ty
 									std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x
 								)
 {
-	// subtree rooted at each grandparent, parent and node_x in inorder traversal.
+	// subtrees rooted at each grandparent, parent and node_x in inorder traversal.
 	std::shared_ptr<SplayTree<Key,Value>::node_type> T_0, T_1, T_2, T_3;
 	T_0 = (parent_node == grand_parent_node->right_child) ? grand_parent_node->left_child : parent_node->left_child;
 	T_1 = node_x->left_child;
@@ -132,6 +181,7 @@ void SplayTree<Key,Value>::zig_zag(std::shared_ptr<SplayTree<Key,Value>::node_ty
 	node_x->parent = (grand_parent_node->parent).lock();
 
 	// make grandparent and parent the children of node_x and in right position
+
 	if (node_x == parent_node->left_child) {
 		node_x->left_child = grand_parent_node;
 		node_x->right_child = parent_node;
@@ -183,6 +233,7 @@ void SplayTree<Key,Value>::zig(std::shared_ptr<SplayTree<Key,Value>::node_type>&
 	node_x->parent = (parent_node->parent).lock();
 
 	// make parent and child the children of node_x and in right position
+
 	if (node_x == parent_node->left_child) {
 		node_x->right_child = parent_node;
 		node_x->left_child = child_node;
