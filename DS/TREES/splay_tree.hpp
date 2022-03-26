@@ -58,7 +58,7 @@ SplayTree<Key,Value>::SplayTree() : sz{0}
 }
 
 template<std::totally_ordered Key, typename Value>
-std::shared_ptr<SplayTree<Key,Value>::node_type>& SplayTree<Key,Value>::__search(
+typename std::shared_ptr<SplayTree<Key,Value>::node_type>& SplayTree<Key,Value>::__search(
 		std::shared_ptr<SplayTree<Key,Value>::node_type>& node, const Key& key)
 {
 	if(node) {
@@ -107,7 +107,8 @@ void SplayTree<Key,Value>::zig_zig(std::shared_ptr<SplayTree<Key,Value>::node_ty
 									std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x
 								)
 {
-	// pass
+	// subtree rooted at each grandparent, parent and node_x in inorder traversal.
+	std::shared_ptr<SplayTree<Key,Value>::node_type> T_0, T_1, T_2, T_3;
 }
 
 template<std::totally_ordered Key, typename Value>
@@ -116,7 +117,8 @@ void SplayTree<Key,Value>::zig_zig(std::shared_ptr<SplayTree<Key,Value>::node_ty
 									std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x
 								)
 {
-	// pass
+	// subtree rooted at each grandparent, parent and node_x in inorder traversal.
+	std::shared_ptr<SplayTree<Key,Value>::node_type> T_0, T_1, T_2, T_3; 
 }
 
 template<std::totally_ordered Key, typename Value>
@@ -125,7 +127,39 @@ void SplayTree<Key,Value>::zig(std::shared_ptr<SplayTree<Key,Value>::node_type>&
 								std::shared_ptr<SplayTree<Key,Value>::node_type>& child_node
 							)
 {
-	// pass.
+	// subtrees rooted at each parent, node_x and child in inorder traversal.
+	std::shared_ptr<SplayTree<Key,Value>::node_type> T_0, T_1, T_2, T_3;
+	T_0 = (node_x == parent_node->right_child) ? parent->left_child : child_node->left_child;
+	T_1 = (child_node == node_x->right_child) ? node_x->left_child : child_node->right_child;
+	T_2 = (child_node == node_x->right_child) ? child_node->left_child : node_x->right_child;
+	T_3 = (child_node == node_x->right_child) ? child_node->right_child : parent_node->right_child;
+	
+	// replace node_x with parent
+	if (parent_node == ((parent_node->parent).lock())->left_child)
+		((parent_node->parent).lock())->left_child = node_x;
+	else
+		((parent_node->parent).lock())->right_child = node_x;
+	node_x->parent = (parent_node->parent).lock();
+
+	// make parent and child the children of node_x and in right position
+	if (node_x == parent_node->left_child) {
+		node_x->right_child = parent_node;
+		node_x->left_child = child_node;
+		parent_node->parent = node_x;
+		parent_node->left_child = T_2;
+		parent_node->right_child = T_3;
+		child_node->left_child = T_0;
+		child_node->right_child = T_1;
+	}
+	else {
+		node_x->left_child = parent_node;
+		node_x->right_child = child;
+		parent_node->parent = node_x;
+		parent_node->left_child = T_0;
+		parent_node->right_child = T_1;
+		child_node->left_child = T_2;
+		child_node->right_child = T_3;
+	}
 }
 
 /*
