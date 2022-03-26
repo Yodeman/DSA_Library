@@ -42,6 +42,7 @@ class SplayTree{
 		void zig(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 		void zig_zig(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 		void zig_zag(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
+		void splay_immediate_child(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 
 	private:
 		size_t sz;
@@ -83,9 +84,12 @@ void SplayTree<Key,Value>::restructure(std::shared_ptr<SplayTreeNode<Key,Value>>
 
 		// pick the child on the same side as node_x
 		auto child_node = (node_x == parent_node->left_child) ? node_x->left_child : node_x->right_child;
+
+		if (grand_parent_node == super_root_node)
+			splay_immediate_child(parent_node, node_x);
 		
 		// perform zig-zig splaying if both parent_node and node_x are on same side
-		if (((parent_node == grand_parent_node->left_child) && (node_x == parent_node->left_child)) || \
+		else if (((parent_node == grand_parent_node->left_child) && (node_x == parent_node->left_child)) || \
 			((parent_node == grand_parent_node->right_child) && (node_x == parent_node->right_child)))
 		{
 			zig_zig(grand_parent_node, parent_node, node_x);
@@ -100,6 +104,59 @@ void SplayTree<Key,Value>::restructure(std::shared_ptr<SplayTreeNode<Key,Value>>
 		else {
 			zig(parent_node, node_x, child_node);
 		}
+	}
+
+	if ((node_x->parent).lock() == super_root_node)
+		root_node = node_x;
+}
+/*
+ * splay the immediate child of the root node.
+*/ 
+template<std::totally_ordered Key, typename Value>
+void SplayTree<Key,Value>::splay_immediate_child(
+				std::shared_ptr<SplayTree<Key,Value>::node_type>& parent_node,
+				std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x
+			)
+{
+	// subtrees rooted at the parent node and node_x children.
+	std::shared_ptr<SplayTree<Key,Value>::node_type> T_0, T_1, T_2;
+	if (node_x == parent_node->left_child){
+		T_0 = node_x->left_child;
+		T_1 = node_x->right_child;
+		T_2 = parent_node->right_child;
+	}
+	else {
+		T_0 = parent_node->left_child;
+		T_1 = node_x->left_child;
+		T_2 = node_x->right_child;
+	}
+	
+	// replace the parent node with node_x
+	if (parent_node == ((parent_node->parent).lock())->left_child)
+		((parent_node->parent).lock())->left_child = node_x;
+	else
+		((parent_node->parent).lock())->right_child = node_x;
+	node_x->parent = (parent_node->parent).lock();
+	
+	if (node_x == parent_node->left_child) {
+		node_x->right_child = parent_node;
+		parent_node->parent = node_x;
+		node_x->left_child = T_0;
+		if (T_0) T_0->parent = node_x;
+		parent_node->left_child = T_1;
+		if (T_1) T_1->parent = parent_node;
+		parent_node->right_child = T_2;
+		if (T_2) T_2->parent = parent_node;
+	}
+	else {
+		node_x->left_child = parent_node;
+		parent_node->parent = node_x;
+		node_x->right_child = T_2;
+		if (T_2) T_2->parent = node_x;
+		parent_node->left_child = T_0;
+		if (T_0) T_0->parent = parent_node;
+		parent_node->right_child = T_1;
+		if (T_1) T_1->parent = parent_node;
 	}
 }
 
@@ -151,7 +208,7 @@ void SplayTree<Key,Value>::zig_zig(std::shared_ptr<SplayTree<Key,Value>::node_ty
 		parent_node->parent = node_x;
 		node_x->right_child = T_3;
 		if (T_3) T_3->parent = node_x;
-		parent_node->left_childe = grand_parent_node;
+		parent_node->left_child = grand_parent_node;
 		grand_parent_node->parent = parent_node;
 		parent_node->right_child = T_2;
 		if (T_2) T_2->parent = parent_node;
@@ -310,9 +367,9 @@ void SplayTree<Key,Value>::insert(const std::pair<Key,Value>& entry)
 	}
 	auto new_node = std::make_shared<SplayTree<Key,Value>::node_type>();
 	new_node->elem = entry;
-	bool required_restructuring = __insert(root_node, new_node);
+	bool requires_restructuring = __insert(root_node, new_node);
 	// splay the newly inserted node.
-	if (required_restructuring)
+	if (requires_restructuring)
 		restructure(new_node);
 	return;
 }
@@ -323,7 +380,7 @@ void SplayTree<Key,Value>::remove(const Key& key)
 	auto node = __search(root_node, key);
 	if (node) {
 		auto parent_node = (node->parent).lock();
-		if((node->left != nullptr) && (node->right != nullptr)) {
+		if((node->left_child != nullptr) && (node->right_child != nullptr)) {
 			// if both children are internal nodes, get the child that follows
 			// the current node in the inorder traversal and then replace the
 			// current node with that child.
