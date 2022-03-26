@@ -39,14 +39,13 @@ class SplayTree{
 		bool __insert(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 		std::shared_ptr<node_type>& __search(std::shared_ptr<node_type>&, const Key&);
 		void restructure(std::shared_ptr<node_type>&);
-		void zig(std::shared_ptr<node_type>&);
-		void zig_zig(std::shared_ptr<node_type>&);
-		void zig_zag(std::shared_ptr<node_type>&);
+		void zig(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
+		void zig_zig(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
+		void zig_zag(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 
 	private:
 		size_t sz;
 		std::shared_ptr<node_type> root_node, super_root_node;
-
 };
 
 template<std::totally_ordered Key, typename Value>
@@ -71,6 +70,62 @@ std::shared_ptr<SplayTree<Key,Value>::node_type>& SplayTree<Key,Value>::__search
 			return __search(node->right_child, key);
 	}
 	return node;
+}
+
+template<std::totally_ordered Key, typename Value>
+void SplayTree<Key,Value>::restructure(std::shared_ptr<SplayTreeNode<Key,Value>>& node_x)
+{
+	while ((node_x->parent).lock() != super_root_node) {
+		auto parent_node = (node_x->parent).lock();
+		auto grand_parent_node = (parent_node->parent).lock();
+
+		// pick the child on the same side as node_x
+		auto child_node = (node_x == parent_node->left_child) ? node_x->left_child : node_x->right_child;
+		
+		// perform zig-zig if both parent_node and node_x are on same side
+		if (((parent_node == grand_parent_node->left_child) && (node_x == parent_node->left_child)) || \
+			((parent_node == grand_parent_node->right_child) && (node_x == parent_node->right_child)))
+		{
+			zig_zig(grand_parent_node, parent_node, node_x);
+		}
+		// perform zig-zag if parent node is left child of grandparent and node_x is right child
+		// of parent or if parent is right child of grandparent and node_x is left child of parent.
+		else if (((parent_node == grand_parent_node->left_child) && (node_x == parent_node->right_child)) || \
+				((parent_node == grand_parent_node->right_child) && (node_x == parent_node->left_child)))
+		{
+			zig_zag(grand_parent_node, parent_node, node_x);
+		}
+		else {
+			zig(parent_node, node_x, child_node);
+		}
+	}
+}
+
+template<std::totally_ordered Key, typename Value>
+void SplayTree<Key,Value>::zig_zig(std::shared_ptr<SplayTree<Key,Value>::node_type>& grand_parent_node,
+									std::shared_ptr<SplayTree<Key,Value>::node_type>& parent_node,
+									std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x
+								)
+{
+	// pass
+}
+
+template<std::totally_ordered Key, typename Value>
+void SplayTree<Key,Value>::zig_zig(std::shared_ptr<SplayTree<Key,Value>::node_type>& grand_parent_node,
+									std::shared_ptr<SplayTree<Key,Value>::node_type>& parent_node,
+									std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x
+								)
+{
+	// pass
+}
+
+template<std::totally_ordered Key, typename Value>
+void SplayTree<Key,Value>::zig(std::shared_ptr<SplayTree<Key,Value>::node_type>& parent_node,
+								std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x,
+								std::shared_ptr<SplayTree<Key,Value>::node_type>& child_node
+							)
+{
+	// pass.
 }
 
 /*
@@ -133,7 +188,7 @@ void SplayTree<Key,Value>::remove(const Key& key)
 	if (node) {
 		auto parent_node = (node->parent).lock();
 		if((node->left != nullptr) && (node->right != nullptr)) {
-			// if both children are interna nodes, get the child that follows
+			// if both children are internal nodes, get the child that follows
 			// the current node in the inorder traversal and then replace the
 			// current node with that child.
 			auto child = node->right_child;
