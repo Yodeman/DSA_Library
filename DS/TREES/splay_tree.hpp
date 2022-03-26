@@ -190,14 +190,38 @@ void SplayTree<Key,Value>::remove(const Key& key)
 	throw std::runtime_error("entry with key doest not exists in the tree!!!");
 }
 
+/*
+ * Search for key in the tree, if the key is found at a node,
+ * splaying is performed on the node, else the parent of the
+ * external node at which the search terminates unsuccessfully
+ * is splayed.
+*/ 
 template<std::totally_ordered Key, typename Value>
 typename SplayTree<Key,Value>::iterator SplayTree<Key,Value>::find(const Key& key)
 {
-	auto node = __search(root_node, key);
-	if (!node)
+	auto node = root_node;
+	std::shared_ptr<SplayTreeNode<Key,Value>> parent;
+	while(node) {
+		if (key < (node->elem).first) {
+			parent_node = node;
+			node = node->left_child;
+		}
+		else if (key > (node->elem).first) {
+			parent_node = node;
+			node = node->right_child;
+		}
+		else
+			break;
+	}
+	if (node && ((node->elem).first == key)){
+		restructure(node);
+		SplayTree<Key,Value>::iterator iter(node);
+		return iter;
+	}
+	else {
+		restructure(parent_node)
 		return end();
-	SplayTree<Key,Value>::iterator iter(node);
-	return iter;
+	}
 }
 
 template<std::totally_ordered Key, typename Value>
