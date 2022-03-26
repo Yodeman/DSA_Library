@@ -161,10 +161,11 @@ void SplayTree<Key,Value>::splay_immediate_child(
 }
 
 template<std::totally_ordered Key, typename Value>
-void SplayTree<Key,Value>::zig_zig(std::shared_ptr<SplayTree<Key,Value>::node_type>& grand_parent_node,
-									std::shared_ptr<SplayTree<Key,Value>::node_type>& parent_node,
-									std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x
-								)
+void SplayTree<Key,Value>::zig_zig(
+				std::shared_ptr<SplayTree<Key,Value>::node_type>& grand_parent_node,
+				std::shared_ptr<SplayTree<Key,Value>::node_type>& parent_node,
+				std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x
+			)
 {
 	// subtrees rooted at each grandparent, parent and node_x in inorder traversal.
 	std::shared_ptr<SplayTree<Key,Value>::node_type> T_0, T_1, T_2, T_3;
@@ -220,10 +221,11 @@ void SplayTree<Key,Value>::zig_zig(std::shared_ptr<SplayTree<Key,Value>::node_ty
 }
 
 template<std::totally_ordered Key, typename Value>
-void SplayTree<Key,Value>::zig_zag(std::shared_ptr<SplayTree<Key,Value>::node_type>& grand_parent_node,
-									std::shared_ptr<SplayTree<Key,Value>::node_type>& parent_node,
-									std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x
-								)
+void SplayTree<Key,Value>::zig_zag(
+				std::shared_ptr<SplayTree<Key,Value>::node_type>& grand_parent_node,
+				std::shared_ptr<SplayTree<Key,Value>::node_type>& parent_node,
+				std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x
+			)
 {
 	// subtrees rooted at each grandparent, parent and node_x in inorder traversal.
 	std::shared_ptr<SplayTree<Key,Value>::node_type> T_0, T_1, T_2, T_3;
@@ -272,10 +274,11 @@ void SplayTree<Key,Value>::zig_zag(std::shared_ptr<SplayTree<Key,Value>::node_ty
 }
 
 template<std::totally_ordered Key, typename Value>
-void SplayTree<Key,Value>::zig(std::shared_ptr<SplayTree<Key,Value>::node_type>& parent_node,
-								std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x,
-								std::shared_ptr<SplayTree<Key,Value>::node_type>& child_node
-							)
+void SplayTree<Key,Value>::zig(
+					std::shared_ptr<SplayTree<Key,Value>::node_type>& parent_node,
+					std::shared_ptr<SplayTree<Key,Value>::node_type>& node_x,
+					std::shared_ptr<SplayTree<Key,Value>::node_type>& child_node
+				)
 {
 	// subtrees rooted at each parent, node_x and child in inorder traversal.
 	std::shared_ptr<SplayTree<Key,Value>::node_type> T_0, T_1, T_2, T_3;
