@@ -30,33 +30,43 @@ class TwoFourTree{
 };
 
 template<std::totally_ordered T>
-std::unique_ptr<T> TwoFourTree<T>::__search(std::shared_ptr<TwoFourTreeNode<T>>& node, const T& entry)
+std::shared_ptr<TwoFourTreeNode<T>> TwoFourTree<T>::__search(
+			std::shared_ptr<TwoFourTreeNode<T>>& parent_node,
+			std::shared_ptr<TwoFourTreeNode<T>>& node,
+			const T& entry
+		)
 {
 	if (node) {
 		// check the entries of a node to see if it contains the entry
 		// of interest.
 		for (char i = 0; i<4; ++i) {
 			if (*((node->entries)[i]) == entry)
-				return (node->entries)[i];
+				return node;
 		}
 		// if the node doesn't contain the entry of interest, pick the child
 		// node that is most likely to contain the entry of interest.
 		for (char i = 0; i < 5; ++i){
-			auto child = (node->children)[i];
-			if (child && (child->entries)[3] >= entry) {
-				node = child;
+			auto child_node = (node->children)[i];
+			if ((child_node && (child_node->entries)[3] >= entry) || (!child_node)) {
+				parent_node = node;
+				node = child_node;
 				break;
 			}
 		}
-		__search(node, entry);
+		__search(parent_node, node, entry);
 	}
-	return nullptr;
+	return parent_node;
 }
 
 template<std::totally_ordered T>
 void TwoFourTree<T>::insert(const T& entry)
 {
-	// pass.
+	if (sz==0){
+		root_node = std::make_shared<TwoFourTreeNode<T>>();
+		(root_node->entries)[0] = std::make_unique<T>(entry);
+		++sz;
+		return;
+	}
 }
 
 #endif	//MY_TWO_FOUR_TREE
