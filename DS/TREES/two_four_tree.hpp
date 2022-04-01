@@ -26,13 +26,31 @@ class TwoFourTree{
 		size_t sz = 0;
 		std::shared_ptr<TwoFourTreeNode<T>> root_node = nullptr;
 		void restructure(std::shared_ptr<TwoFourTreeNode<T>>&);
-		std::unique_ptr<T> __search(const T&);
+		std::unique_ptr<T> __search(std::shared_ptr<TwoFourTreeNode<T>>&);
 };
 
 template<std::totally_ordered T>
-std::unique_ptr<T> TwoFourTree<T>::__search(const T&)
+std::unique_ptr<T> TwoFourTree<T>::__search(std::shared_ptr<TwoFourTreeNode<T>>& node, const T& entry)
 {
-	// pass.
+	if (node) {
+		// check the entries of a node to see if it contains the entry
+		// of interest.
+		for (char i = 0; i<4; ++i) {
+			if (*((node->entries)[i]) == entry)
+				return (node->entries)[i];
+		}
+		// if the node doesn't contain the entry of interest, pick the child
+		// node that is most likely to contain the entry of interest.
+		for (char i = 0; i < 5; ++i){
+			auto child = (node->children)[i];
+			if (child && (child->entries)[3] >= entry) {
+				node = child;
+				break;
+			}
+		}
+		__search(node, entry);
+	}
+	return nullptr;
 }
 
 template<std::totally_ordered T>
