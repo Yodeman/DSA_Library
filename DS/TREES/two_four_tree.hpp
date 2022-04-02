@@ -152,12 +152,99 @@ void TwoFourTree<T>::remove(const T& entry)
 		}
 		--sz;
 	}
+	if (!entries[0])
+		restructure(node);
 }
 
 template<std::totally_ordered T>
-void TwoFourTree<T>::restructure(const T& entry)
+void TwoFourTree<T>::restructure(std::shared_ptr<TwoFourTreeNode<T>>& node)
 {
-	// pass.
+	// overflow??
+	if ((node->entries)[3]) {
+		__resolve_overflow(node);
+	}
+	// underflow??
+	else if (!(node->entries)[0]){
+		__resolve_underflow(node);
+	}
+}
+
+template<std::totally_ordered T>
+void TwoFourTree<T>::__resolve_overflow(std::shared_ptr<TwoFourTreeNode<T>>& node)
+{
+	if (node == root_node){
+		// new nodes to store entries.
+		std::shared_ptr<TwoFourTreeNode<T>> new_node = std::make_shared<TwoFourTreeNode<T>>();
+		std::shared_ptr<TwoFourTreeNode<T>> first_node_from_left = std::make_shared<TwoFourTreeNode<T>>();
+		std::shared_ptr<TwoFourTreeNode<T>> second_node_from_left = std::make_shared<TwoFourTreeNode<T>>();
+		
+		// move entries.
+		(new_node->entries)[0] = std::move((root_node->entries)[2]);
+		(first_node_from_left->entries)[0] = std::move((root_node->entries)[0]);
+		(first_node_from_left->entries)[1] = std::move((root_node->entries)[1]);
+		(second_node_from_left->entries)[0] = std::move((root_node->entries)[3]);
+
+		(new_node->children)[0]  = first_node_from_left;
+		(new_node->children)[1] = second_node_from_left;
+		first_node_from_left->parent = new_node;
+		second_node_from_left->parent = new_node;
+		root_node.reset();
+		root_node = new_node;
+		return;
+
+	}
+	else {
+		int entry_idx = node_idx = 3;
+		auto parent_node = (node->parent).lock();
+		std::shared_ptr<TwoFourTreeNode<T>> first_node = std::make_shared<TwoFourTreeNode<T>>();
+		std::shared_ptr<TwoFourTreeNode<T>> second_node = std::make_shared<TwoFourTreeNode<T>>();
+		// look for the right position in parent node entries to insert the entry at index 2 of
+		// the overflowing child node.
+		while(entry_idx > 0) {
+			if (((parent_node->entries)[entry_idx]) && (*((parent_node->entry)[entry_idx]) > *((node->entry)[2]))) {
+				parent_node->entries[entry_idx+1] = std::move((parent_node->entries)[entry_idx]);
+			}
+			else if (((parent_node->entries)[entry_idx]) && (*((parent_node->entry)[entry_idx]) < *((node->entry)[2]))) {
+				(parent_node->entries)[entry_idx+1] = std::move((node->entries)[2]);
+				break;
+			}
+			--entry_idx;
+		}
+		
+		// create space for the new node that will be inserted in the children of the parent node.
+		while(node_idx > 0) {
+			if ((parent_node->children)[node_idx] != node)
+				(parent_node->children)[node_idx+1] = std::move((parent_node->children)[node_idx]);
+			else
+				break;
+			--node_idx
+		}
+
+		(first_node->entries)[0] = std::move((node->entries)[0]);
+		(first_node->entries)[1] = std::move((node->entries)[1]);
+		(first_node->children)[0] = std::move((node->children)[0]);
+		(first_node->children)[1] = std::move((node->children)[1]);
+		(first_node->children)[2] = std::move((node->children)[2]);
+
+		(second_node->entries)[0] = std::move((node->entries)[3]);
+		(second_node->children)[0] = std::move((node->children)[3]);
+		(second_node->children)[1] = std::move((node->children)[4]);
+
+		node.reset();
+		(parent_node->children)[node_idx] = first_node;
+		(parent_node->children)[node_idx+1] = second_node;
+		
+		// restructure parent node if it has overflown.
+		if ((parent_node->entries)[3])
+			__resolve_overflow(parent_node);
+
+	}
+}
+
+template<std::totally_ordered T>
+void TwoFourTree<T>::__resolve_underflow(std::shared_ptr<TwoFourTreeNode<T>>& node)
+{
+	// pass
 }
 
 #endif	//MY_TWO_FOUR_TREE
