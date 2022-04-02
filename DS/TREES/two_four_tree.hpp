@@ -40,20 +40,39 @@ std::shared_ptr<TwoFourTreeNode<T>> TwoFourTree<T>::__search(
 		// check the entries of a node to see if it contains the entry
 		// of interest.
 		for (char i = 0; i<4; ++i) {
-			if (*((node->entries)[i]) == entry)
+			if ((node->entry)[i] && (*((node->entries)[i]) == entry))
 				return node;
 		}
 		// if the node doesn't contain the entry of interest, pick the child
 		// node that is most likely to contain the entry of interest.
 		for (char i = 0; i < 5; ++i){
 			auto child_node = (node->children)[i];
-			if ((child_node && (child_node->entries)[3] >= entry) || (!child_node)) {
+			// since child nodes are ordered in increasing order, once the
+			// iteration hits a null child node from left, it stops since
+			// its siblings on its right hand side are definitely going to
+			// be null.
+			if (!child_node) {
 				parent_node = node;
 				node = child_node;
 				break;
 			}
+			// if the child node contains some entries, since the entries are
+			// ordered in increasing order, checks if the last non-null entry
+			// in the node is greater than the entry of interest, then, the
+			// node is most likely to contain the entry of interest, else,
+			// move to the next sibling.
+			else if (child_node) {
+				auto ri = (child_node->entries).rbegin();
+				while ((ri != (child_node->entries).rend()) && (*ri == nullptr)) ++ri;
+				if (*ri && *(*ri) >= entry) {
+					parent_node = node;
+					node = child_node;
+					break;
+				}
+				continue;
+			}
 		}
-		__search(parent_node, node, entry);
+		return __search(parent_node, node, entry);
 	}
 	return parent_node;
 }
@@ -67,6 +86,16 @@ void TwoFourTree<T>::insert(const T& entry)
 		++sz;
 		return;
 	}
+	auto node = __search(nullptr, root_node, entry);
+	auto entries = node->entries;
+	// do nothing if entry already exists, else insert
+	// the new entry.
+	for (char i = 0; i < 4; ++i) {
+		if (*(entries[i]) == entry)
+			return;
+
+	}
+
 }
 
 #endif	//MY_TWO_FOUR_TREE
