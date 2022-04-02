@@ -88,13 +88,32 @@ void TwoFourTree<T>::insert(const T& entry)
 	}
 	auto node = __search(nullptr, root_node, entry);
 	auto entries = node->entries;
-	// do nothing if entry already exists, else insert
-	// the new entry.
+	auto swap_idx = -1 // the index that holds the entry greater than the new entry
 	for (char i = 0; i < 4; ++i) {
-		if (*(entries[i]) == entry)
+		// do nothing if entry already exists, else insert
+		// the new entry.
+		if (entries[i] && *(entries[i]) == entry) {
 			return;
-
+		}
+		else if (!entries[i] || *(entries[i]) > entry) {
+			swap_idx = i;
+			break;
+		}
 	}
+
+	if (!entries[swap_idx]) {
+		entries[swap_idx] = std::make_unique<T>(entry);
+		++sz;
+	}
+	else {
+		for (char i = 3; i > swap_idx; --i)
+			entries[i] = std::move(entries[i-1]);
+		entries[swap_idx] = std::make_unique<T>(entry);
+		++sz;
+	}
+	// perfom split operation if the number of entries in a node is 4.
+	if (entries[3])
+		restructure(node);
 
 }
 
