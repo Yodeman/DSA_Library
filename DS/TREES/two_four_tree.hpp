@@ -117,4 +117,47 @@ void TwoFourTree<T>::insert(const T& entry)
 
 }
 
+template<std::totally_ordered T>
+std::unique_ptr TwoFourTree<T>::find(const T& entry)
+{
+	auto node = __search(nullptr, root_node, entry);
+	auto entries = node->entries;
+	for (auto i=0; i < 3; ++i) {
+		if (entries[i] && *(entries[i]) == entry)
+			return std::make_unique<T>(entry);
+	}
+
+	return nullptr;
+}
+
+template<std::totally_ordered T>
+void TwoFourTree<T>::remove(const T& entry)
+{
+	auto node = __search(nullptr, root_node, entry);
+	auto entries = node->entries;
+	auto idx = -1;
+	for (auto i=0; i<3; ++i) {
+		if (entries[i] && *(entries[i])==entry) {
+			idx = i;
+			break;
+		}
+	}
+
+	if (idx == -1) {
+		throw std::runtime_error("the given entry doesn't exists in the tree!!!");
+	}
+	else {
+		for (auto i=idx; i < 3; ++i) {
+			entries[i] = std::move(entries[i+1]);
+		}
+		--sz;
+	}
+}
+
+template<std::totally_ordered T>
+void TwoFourTree<T>::restructure(const T& entry)
+{
+	// pass.
+}
+
 #endif	//MY_TWO_FOUR_TREE
