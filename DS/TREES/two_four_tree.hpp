@@ -165,7 +165,7 @@ void TwoFourTree<T>::remove(const T& entry)
 		// remove the entry if the children of the node aren't all internal
 		// nodes.
 		bool chidren_are_internal = True;
-		for (auto i=0; i < n_e+2; ++i){
+		for (auto i=0; i < n_e+1; ++i){
 			if (!(node->children)[i]) {
 				children_are_internal = False;
 				node->remove_entry(idx);
@@ -287,24 +287,41 @@ void TwoFourTree<T>::__resolve_underflow(std::shared_ptr<TwoFourTreeNode<T>>& no
 	std::shared_ptr<TwoFourTreeNode<T>> first_sibling = (i > 0) ? (parent->children)[i-1] : nullptr;
 	std::shared_ptr<TwoFourTreeNode<T>> second_sibling = (i < 4) ? (parent->children)[i+1] : nullptr;
 
-	if (first_sibling && first_sibling->n_entries >= 3)
-		__transfer_operation(node, first_sibling, idx);
-	else if (second_sibling && second_sibling->n_entries >= 3)
-		__tranfer_operation(node, second_sibling, idx);
-	else if (first_sibling && first_sibling->n_entries <= 2)
+	if (first_sibling && first_sibling->n_entries >= 2)
+		__transfer_operation(parent_node, node, first_sibling, idx);
+	else if (second_sibling && second_sibling->n_entries >= 2)
+		__tranfer_operation(parent_node, node, second_sibling, idx);
+	else if (first_sibling && first_sibling->n_entries == 1)
 		__fussion_operation(node, first_sibling, idx);
-	else if (second_sibling && second_sibling->n_entries <=2 )
+	else if (second_sibling && second_sibling->n_entries == 1)
 		__fussion_operation(node, second_sibling, idx);
 }
 
 template<std::totally_ordered T>
 void TwoFourTree<T>::__transfer_operation(
+			std::shared_ptr<TwoFourTreeNode<T>>& parent_node,
 			std::shared_ptr<TwoFourTreeNode<T>>& node,
 			std::shared_ptr<TwoFourTreeNode<T>>& sibling,
 			char index
 		)
 {
-	
+	// if sibling is on the left.
+	if((index-1 > 0) && ((parent_node->children)[index-1] == sibling)) {
+		T entry = *((sibling->entries)[sibling->n_entries -1]);
+		sibling->remove_entry((sibling->n_entries - 1))
+		parent_node->insert_entry(std::forward<T>(entry));
+		entry = *((parent_node->entries)[parent_node->n_entries - 1]);
+		parent_node->remove_entry((parent_node->n_entries -1));
+		node->insert_entry(std::forward<T>(entry));
+	}
+	else {
+		T entry = *((sibling->entries)[0]);
+		sibling->remove_entry(0);
+		parent_node->insert_entry(std::forward<T>(entry));
+		entry = *((parent_node->entries)[0]);
+		parent_node->remove_entry(0);
+		node->insert_entry(std::forward<T>(entry));
+	}
 }
 
 template<std::totally_ordered T>
