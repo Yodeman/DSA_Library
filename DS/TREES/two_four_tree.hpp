@@ -278,7 +278,43 @@ void TwoFourTree<T>::__resolve_overflow(std::shared_ptr<TwoFourTreeNode<T>>& nod
 template<std::totally_ordered T>
 void TwoFourTree<T>::__resolve_underflow(std::shared_ptr<TwoFourTreeNode<T>>& node)
 {
-	// pass
+	auto parent_node = (node->parent).lock();
+	char idx;
+	for (idx = 0; i < 4; ++i){
+		if ((parent_node->children)[i] == node)
+			break;
+	}
+	std::shared_ptr<TwoFourTreeNode<T>> first_sibling = (i > 0) ? (parent->children)[i-1] : nullptr;
+	std::shared_ptr<TwoFourTreeNode<T>> second_sibling = (i < 4) ? (parent->children)[i+1] : nullptr;
+
+	if (first_sibling && first_sibling->n_entries >= 3)
+		__transfer_operation(node, first_sibling, idx);
+	else if (second_sibling && second_sibling->n_entries >= 3)
+		__tranfer_operation(node, second_sibling, idx);
+	else if (first_sibling && first_sibling->n_entries <= 2)
+		__fussion_operation(node, first_sibling, idx);
+	else if (second_sibling && second_sibling->n_entries <=2 )
+		__fussion_operation(node, second_sibling, idx);
+}
+
+template<std::totally_ordered T>
+void TwoFourTree<T>::__transfer_operation(
+			std::shared_ptr<TwoFourTreeNode<T>>& node,
+			std::shared_ptr<TwoFourTreeNode<T>>& sibling,
+			char index
+		)
+{
+	
+}
+
+template<std::totally_ordered T>
+void TwoFourTree<T>::__fussion_operation(
+			std::shared_ptr<TwoFourTreeNode<T>>& node,
+			std::shared_ptr<TwoFourTreeNode<T>>& sibling,
+			char index
+		)
+{
+	// pass.
 }
 
 #endif	//MY_TWO_FOUR_TREE
