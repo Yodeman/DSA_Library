@@ -8,9 +8,37 @@
 
 template<std::totally_ordered T>
 struct TwoFourTreeNode{
+	unsigned char n_entries = 0;
 	std::array<std::unique_ptr<T>, 4> entries{};
 	std::array<std::shared_ptr<TwoFourTreeNode<T>>, 5> children{};
 	std::weak_ptr<TwoFourTreeNode<T>> parent;
+
+	void insert_entry(T&& entry) {
+		if (!n_entries) {
+			entries[0] = std::make_unique<T>(entry);
+			++n_entries;
+			return;
+		}
+		else {
+			for (auto i=n_entries; i>0; --i) {
+				if (entries[i-1] && *(entries[i-1]) > entry) {
+					entries[i] = std::move(entries[i-1]);
+				}
+				else {
+					entries[i] = std::make_unique<T>(entry);
+					++n_entries;
+					return;
+				}
+			}
+			entries[0] = std::make_unique<T>(entry);
+			++n_entries;
+		}
+	}
+	void remove_entry(unsigned char index) {
+		for (auto i=index; i<n_entries; ++i)
+			entries[i] = std::move(entries[i+1]);
+		--n_entries;
+	}
 };
 
 template<std::totally_ordered T>
@@ -39,13 +67,13 @@ std::shared_ptr<TwoFourTreeNode<T>> TwoFourTree<T>::__search(
 	if (node) {
 		// check the entries of a node to see if it contains the entry
 		// of interest.
-		for (char i = 0; i<4; ++i) {
+		for (unsigned char i = 0; i<3; ++i) {
 			if ((node->entry)[i] && (*((node->entries)[i]) == entry))
 				return node;
 		}
 		// if the node doesn't contain the entry of interest, pick the child
 		// node that is most likely to contain the entry of interest.
-		for (char i = 0; i < 5; ++i){
+		for (unsigned char i = 0; i<4; ++i){
 			auto child_node = (node->children)[i];
 			// since child nodes are ordered in increasing order, once the
 			// iteration hits a null child node from left, it stops since
@@ -62,9 +90,9 @@ std::shared_ptr<TwoFourTreeNode<T>> TwoFourTree<T>::__search(
 			// node is most likely to contain the entry of interest, else,
 			// move to the next sibling.
 			else if (child_node) {
-				auto ri = (child_node->entries).rbegin();
-				while ((ri != (child_node->entries).rend()) && (*ri == nullptr)) ++ri;
-				if (*ri && *(*ri) >= entry) {
+				auto n_e = child_node->n_entries;
+				//while ((ri != (child_node->entries).rend()) && (*ri == nullptr)) ++ri;
+				if (n_e && *((childe_node->entries)[n_e]) >= entry) {
 					parent_node = node;
 					node = child_node;
 					break;
@@ -78,39 +106,25 @@ std::shared_ptr<TwoFourTreeNode<T>> TwoFourTree<T>::__search(
 }
 
 template<std::totally_ordered T>
-void TwoFourTree<T>::insert(const T& entry)
+void TwoFourTree<T>::insert(T&& entry)
 {
 	if (sz==0){
 		root_node = std::make_shared<TwoFourTreeNode<T>>();
-		(root_node->entries)[0] = std::make_unique<T>(entry);
+		root_node->insert_entry(std::forward<T>(entry));
 		++sz;
 		return;
 	}
 	auto node = __search(nullptr, root_node, entry);
 	auto entries = node->entries;
-	auto swap_idx = -1 // the index that holds the entry greater than the new entry
-	for (char i = 0; i < 4; ++i) {
+	auto n_e = node->n_entries;
+	for (char i = 0; i < n_e; ++i) {
 		// do nothing if entry already exists, else insert
 		// the new entry.
 		if (entries[i] && *(entries[i]) == entry) {
 			return;
 		}
-		else if (!entries[i] || *(entries[i]) > entry) {
-			swap_idx = i;
-			break;
-		}
 	}
-
-	if (!entries[swap_idx]) {
-		entries[swap_idx] = std::make_unique<T>(entry);
-		++sz;
-	}
-	else {
-		for (char i = 3; i > swap_idx; --i)
-			entries[i] = std::move(entries[i-1]);
-		entries[swap_idx] = std::make_unique<T>(entry);
-		++sz;
-	}
+	node->insert_entry(std::forward<T>(entry));
 	// perfom split operation if the number of entries in a node is 4.
 	if (entries[3])
 		restructure(node);
@@ -122,11 +136,11 @@ std::unique_ptr TwoFourTree<T>::find(const T& entry)
 {
 	auto node = __search(nullptr, root_node, entry);
 	auto entries = node->entries;
-	for (auto i=0; i < 3; ++i) {
+	auto n_e = node->n_entries;
+	for (auto i=0; i < n_e; ++i) {
 		if (entries[i] && *(entries[i]) == entry)
 			return std::make_unique<T>(entry);
 	}
-
 	return nullptr;
 }
 
@@ -135,8 +149,9 @@ void TwoFourTree<T>::remove(const T& entry)
 {
 	auto node = __search(nullptr, root_node, entry);
 	auto entries = node->entries;
-	auto idx = -1;
-	for (auto i=0; i<3; ++i) {
+	auto n_e = node->n_entries;
+	char idx = -1; // the index of the entry to be deleted.
+	for (auto i=0; i<n_e; ++i) {
 		if (entries[i] && *(entries[i])==entry) {
 			idx = i;
 			break;
@@ -147,13 +162,32 @@ void TwoFourTree<T>::remove(const T& entry)
 		throw std::runtime_error("the given entry doesn't exists in the tree!!!");
 	}
 	else {
-		for (auto i=idx; i < 3; ++i) {
-			entries[i] = std::move(entries[i+1]);
+		// remove the entry if the children of the node aren't all internal
+		// nodes.
+		bool chidren_are_internal = True;
+		for (auto i=0; i < n_e+2; ++i){
+			if (!(node->children)[i]) {
+				children_are_internal = False;
+				node->remove_entry(idx);
+				if (!entries[0])
+					restructure(node);
+				--sz;
+				return;
+			}
 		}
-		--sz;
+		// else find the rightmost child node rooted at child node at
+		// index `idx` whose children are all null, and swap its
+		// last entry with the entry that's about to be deleted.
+		if (children_are_internal){
+			auto child_node = (node->children)[idx];
+			while ((child_node->children)[child_node->n_entries])
+				child_node = (child_node->children)[child_node->n_entries];
+			(node->entries)[idx] = std::move((child_node->entries)[child_node->n_entries - 1]);
+			if (!(child_node->entries)[0])
+				restructure(child_node);
+			return;
+		}
 	}
-	if (!entries[0])
-		restructure(node);
 }
 
 template<std::totally_ordered T>
