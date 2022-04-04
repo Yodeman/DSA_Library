@@ -292,9 +292,9 @@ void TwoFourTree<T>::__resolve_underflow(std::shared_ptr<TwoFourTreeNode<T>>& no
 	else if (second_sibling && second_sibling->n_entries >= 2)
 		__tranfer_operation(parent_node, node, second_sibling, idx);
 	else if (first_sibling && first_sibling->n_entries == 1)
-		__fussion_operation(node, first_sibling, idx);
+		__fussion_operation(parent_node, node, first_sibling, idx);
 	else if (second_sibling && second_sibling->n_entries == 1)
-		__fussion_operation(node, second_sibling, idx);
+		__fussion_operation(parent_node, node, second_sibling, idx);
 }
 
 template<std::totally_ordered T>
@@ -326,12 +326,56 @@ void TwoFourTree<T>::__transfer_operation(
 
 template<std::totally_ordered T>
 void TwoFourTree<T>::__fussion_operation(
+			std::shared_ptr<TwoFourTreeNode<T>>& parent_node,
 			std::shared_ptr<TwoFourTreeNode<T>>& node,
 			std::shared_ptr<TwoFourTreeNode<T>>& sibling,
 			char index
 		)
 {
-	// pass.
+	// sibling is on the left
+	if ((index-1 > 0) && ((parent_node->children)[index-1] == sibling)) {
+		T entry = *((parent_node->entries)[parent->n_entries - 1]);
+		parent_node->remove_entry((parent->n_entries - 1));
+		node->insert_entry(std::forward<T>(entry));
+		// merge node with sibling...
+		entry = *((node->entries)[0]);
+		sibling->insert_entry(std::forward<T>(entry));
+		(sibling->children)[sibling->n_entries + 1] = (node->children)[0];
+
+		((node->children)[0]).reset();
+		node.reset();
+		// check if fussion operation has caused parent node to underflow.
+		if (!(parent_node->entries)[0]) {
+			if (parent_node == root_node) {
+				root_node.reset();
+				root_node = sibling;
+				return;
+			}
+			__resolve_underflow(parent_node);
+		}
+		
+	}
+	else {
+		T entry = *((parent_node->entries)[0]);
+		parent_node->remove_entry(0);
+		node->insert_entry(std::forward<T>(entry));
+		// merge sibling with node...
+		entry = *((sibling->entries)[0]);
+		node->insert_entry(std::forward<T>(entry));
+		(node->children)[node->n_entries] = (sibling->children)[0];
+
+		((sibling->children)[0]).reset();
+		sibling.reset();
+		// check if fussion operation has caused parent node to underflow
+		if (!(parent_node->entries)[0]) {
+			if (parent_node == root_node) {
+				root_node.reset();
+				root_node = node;
+				return;
+			}
+			__resolve_underflow(parent_node);
+		}
+	}
 }
 
 #endif	//MY_TWO_FOUR_TREE
