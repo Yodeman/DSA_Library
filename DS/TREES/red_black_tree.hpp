@@ -62,13 +62,47 @@ std::shared_ptr< typename RBTree<Key,Value>::node_type>& __search(
 		)
 {
 	if(node) {
-		if (key < (node->entry).first)
+		if (key < (node->entry).first) {
 			return __search(node->left_child, key);
-		else if (key > (node->entry).first)
+		} else if (key > (node->entry).first) {
 			return __search(node->right_child, key);
+		}
 		return node;
 	}
 	return node;
+}
+
+/*
+ * Inserts a new node into the tree, if the tree contains a node
+ * with same key as the new node, it updates the existing node's
+ * value with the new one.
+*/
+template<std::totally_ordered Key, typename Value>
+void RBTree<Key,Value>::__insert(
+			std::shared_ptr<RBTree<Key,Value>::node_type> parent_node,
+			std::shared_ptr<RBTree<Key,Value>::node_type> new_node
+		)
+{
+	if((parent_node->entry).first == (new_node->entry).first) {
+		(parent_node->entry).second = (new_node->entry).second;
+		return;
+	} else if ((parent_node->entry).first < (new_node->entry).first) {
+		if (!(parent_node->left_child)) {
+			parent_node->left_child = new_node;
+			new_node->parent = parent_node;
+			++sz;
+			return;
+		}
+		return __insert(parent_node->left_child, new_node);
+	} else {
+		if (!(parent_node->right_child)) {
+			parent_node->right_child = new_node;
+			new_node->parent = parent_node;
+			++sz;
+			return;
+		}
+		return __insert(parent_node->right_child, new_node);
+	}
 }
 
 #endif //MY_RB_TREE
