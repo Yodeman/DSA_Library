@@ -105,4 +105,25 @@ void RBTree<Key,Value>::__insert(
 	}
 }
 
+template<std::totally_ordered Key, typename Value>
+void RBTree<Key,Value>::insert(const Key& key, const Value& val)
+{
+	std::pair<Key,Value> new_entry {key, val};
+	if (sz==0) {
+		root_node->entry = new_entry;
+		root_node->is_red = false;
+		++sz;
+		return;
+	}
+	auto new_node = std::make_shared<RBTree<Key,Value>::node_type>();
+	new_node->entry = new_entry;
+	__insert(new_node);
+
+	// check and resolve double red if it has occured due to
+	// the newly inserted node.
+	auto parent_node = (node->parent).lock();
+	if (parent_node->is_red)
+		__resolve_double_red(parent_node, new_node);
+}
+
 #endif //MY_RB_TREE
