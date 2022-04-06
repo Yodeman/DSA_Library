@@ -127,4 +127,80 @@ void RBTree<Key,Value>::insert(const Key& key, const Value& val)
 		__resolve_double_red(parent_node, new_node);
 }
 
+template<std::totally_ordered Key, typename Value>
+void RBTree<Key,Value>::remove(const Key& key)
+{
+	auto node = __search(root_node, key);
+	if (node) {
+		auto parent_node = (node->parent).lock();
+		if ((node->left_child != nullptr) && (node->right_child != nullptr)){
+			// if both children of the current node are internal nodes, replace the
+			// current node with the node preceeding it in inorder traversal
+
+			auto child = node->right_child;
+			while(child->left_child)
+				child = child->left_child;
+			node->entry = child->entry;
+
+			// if the child node has a right child, move the right child up to occupy
+			// the position of the about to be deleted child node.
+			auto child_parent = (child->parent).lock();
+			auto child_right_child = child->right_child;
+			if (child_right_child) {
+				if (child == child_parent->right_child) {
+					child_parent->right_child = child_right_child;
+				} else {
+					child_parent->left_child = child_right_child;
+				}
+				// check and resolve double black if it has occured due
+				// to the removed node.
+				if (!(child->is_red && child_right_child->is_red)) {
+					child_right_child->is_red = false;
+				} else if (!(child->is_red) && !(child_right_child->is_red)) {
+					__resolve_double_black(child_parent, child_right_child);
+				}
+			} else {
+				(((child->parent).lock())->right_child).reset();
+			}
+			(child->right_child).reset();
+			(child->right_child).reset();
+			(child->parent).reset();
+			child.reset();
+			--sz;
+			return;
+		} else if ((node->left_child == nullptr) || (node->left_child == nullptr)) {
+			// either of the children of the about to be deleted node is an internal
+			// node, move the child (the internal node) to occupy its parent position.
+			auto child = (node->left_child == nullptr) ? node->right_child : node->left_child;
+			if (child) {
+				if (node == parent_node->left_child) {
+					parent_node->left_child  = child;
+				} else {
+					parent_node->right_child = child;
+				}
+				child->parent = parent_node;
+				// check and resolve double black if it has occured due
+				// to the removed node.
+				if (!(node->is_red && child->is_red)) {
+					child->is_red = false;
+				} else if (!(node->is_red) && !(child->is_red)){
+					__resolve_double_black(parent_node, child);
+				}
+			} else {
+				if (node == parent_node->left_child) {
+					parent_node->left_child = nullptr;
+				} else {
+					parent_node->right_child = nullptr;
+				}
+			}
+			(node->left_child).reset();
+			(node->right_child).reset();
+			(node->parent).reset();
+			--sz;
+			return;
+		}
+	}
+	throw std::runtime_error("entry with the specified key doesn't exists!!!");
+}
+
 #endif //MY_RB_TREE
