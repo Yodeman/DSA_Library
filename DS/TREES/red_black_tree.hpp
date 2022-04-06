@@ -37,6 +37,7 @@ class RBTree{
 		using node_type = std::shared_ptr<RBTreeNode<Key,Value>>;
 		void __insert(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 		std::shared_ptr<node_type>& __search(std::shared_ptr<node_type>&, const Key&);
+		void __resolve_double_red(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 	private:
 		size_t sz;
 		// added super root node to aid the implementation of the iterator.
