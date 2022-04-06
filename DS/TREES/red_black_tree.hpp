@@ -39,6 +39,7 @@ class RBTree{
 		std::shared_ptr<node_type>& __search(std::shared_ptr<node_type>&, const Key&);
 	private:
 		size_t sz;
+		// added super root node to aid the implementation of the iterator.
 		node_type root_node, super_root_node;
 };
 
@@ -50,5 +51,24 @@ RBTree<Key,Value>::RBTree() : sz{0} {
 	super_root_node->left_child = root_node;
 }
 
+/*
+ * Searches for entry with the given key using the inorder traversal
+ * algorithm.
+*/ 
+template<std::totally_ordered Key, typename Value>
+std::shared_ptr< typename RBTree<Key,Value>::node_type>& __search(
+			std::shared_ptr<RBTree<Key,Value>::node_type>& node,
+			const Key& key
+		)
+{
+	if(node) {
+		if (key < (node->entry).first)
+			return __search(node->left_child, key);
+		else if (key > (node->entry).first)
+			return __search(node->right_child, key);
+		return node;
+	}
+	return node;
+}
 
 #endif //MY_RB_TREE
