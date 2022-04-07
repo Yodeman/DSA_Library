@@ -124,6 +124,30 @@ void RBTree<Key,Value>::__restructure(
 	return;
 }
 
+/*
+ * resolves double red internal property violation by recoloring
+ * the nodes and perfoming restructuring.
+*/
+template<std::totally_ordered Key, typename Value>
+void RBTree<Key,Value>::__recolor(
+			std::shared_ptr<RBTree<Key,Value>::node_type>& parent_node,
+			std::shared_ptr<RBTree<Key,Value>::node_type>& node,
+			std::shared_ptr<RBTree<Key,Value>::node_type>& sibling
+		)
+{
+	if ((parent_node == root_node) || ())
+		return;
+	node->is_red = false;
+	sibling->is_red = false;
+	parent_node->is_red  = true;
+
+	// resolve double red internal property violation
+	// if it has occured due to recoloring
+	auto grandparent_node = (parent_node->parent).lock();
+	if ((grandparent_node->is_red) && (parent_node->is_red))
+		__resolve_double_red(grandparent_node, parent_node);
+}
+
 template<std::totally_ordered Key, typename Value>
 void RBTree<Key,Value>::__resolve_double_red(
 			std::shared_ptr<RBTree<Key,Value>::node_type>& parent_node,
