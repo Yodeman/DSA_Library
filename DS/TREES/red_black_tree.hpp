@@ -55,6 +55,75 @@ RBTree<Key,Value>::RBTree() : sz{0} {
 	super_root_node->left_child = root_node;
 }
 
+/*
+ * restructures the position of nodes in the tree using the tri-node
+ * restructuring algorith,
+*/
+template<std::totally_ordered Key, typename Value>
+void RBTree<Key,Value>::__restructure(
+			std::shared_ptr<RBTree<Key,Value>::node_type>& grandparent_node,
+			std::shared_ptr<RBTree<Key,Value>::node_type>& parent_node,
+			std::shared_ptr<RBTree<Key,Value>::node_type>& node
+		)
+{
+	std::shared_ptr<RBTree<Key,Value>::node_type> a, b, c, T0, T1, T2, T3;
+
+	// get the order of the three nodes (i.e. grandparent, parent and node)
+	// according to the inorder traversal
+	if (parent_node == grandparent_node->right_child) {
+		a = grandparent_node;
+		if (node == parent_node->right_child) {
+			b = parent_node;
+			c = node;
+		} else {
+			b = node;
+			c = parent_node;
+		}
+	} else {
+		c = grandparent_node;
+		if (node == parent_node->right_child) {
+			a = parent_node;
+			b = node;
+		} else {
+			a = node;
+			b = parent_node;
+		}
+	}
+
+	// get the subtrees rooted at grandparent, parent and node
+	T0 = a->left_child;
+	T1 = (node == b->left_child) ? node->right_child : b->left_child;
+	T2 = (node == b->right_child) ? node->left_child : b->right_child;
+	T3 = c->right_child;
+
+	// restructure the nodes and the subtrees.
+	b->parent = (grandparent_node->parent).lock();
+	if (grandparent_node == ((grandparent_node->parent).lock())->right_child) {
+		((grandparent_node->parent).lock())->right_child = b;
+	} else {
+		((grandparent_node->parent).lock())->left_child = a;
+	}
+	b->right_child = c;
+	b->left_child = a;
+
+	b->is_red = false;
+	a->is_red = true;
+	c->is_red = true;
+
+	a->parent = b;
+	c->parent = b;
+	a->left_chile = T0;
+	if (T0) T0->parent = a;
+	a->right_child = T1;
+	if (T1) T1->parent = a;
+	c->left_child = T2;
+	if (T2) T2->parent = c;
+	c->right_child = T3;
+	if (T3) T3->parent = c;
+
+	return;
+}
+
 template<std::totally_ordered Key, typename Value>
 void RBTree<Key,Value>::__resolve_double_red(
 			std::shared_ptr<RBTree<Key,Value>::node_type>& parent_node,
