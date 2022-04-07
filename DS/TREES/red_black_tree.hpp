@@ -38,6 +38,9 @@ class RBTree{
 		void __insert(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 		std::shared_ptr<node_type>& __search(std::shared_ptr<node_type>&, const Key&);
 		void __resolve_double_red(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
+		void __resolve_double_black(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
+		void __restructure(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
+		void __recolor(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 	private:
 		size_t sz;
 		// added super root node to aid the implementation of the iterator.
@@ -50,6 +53,23 @@ RBTree<Key,Value>::RBTree() : sz{0} {
 	super_root_node = std::make_shared<RBTree<Key,Value>::node_type>();
 	root_node->parent = super_root_node;
 	super_root_node->left_child = root_node;
+}
+
+template<std::totally_ordered Key, typename Value>
+void RBTree<Key,Value>::__resolve_double_red(
+			std::shared_ptr<RBTree<Key,Value>::node_type>& parent_node,
+			std::shared_ptr<RBTree<Key,Value>::node_type>& node
+		)
+{
+	auto grand_parent = (parent_node->parent).lock();
+	auto sibling = (grand_parent->right_child == parent_node) ? grand_parent->left_child : grand_parent->right_child;
+	if (!(sibling->is_red)) {
+		// case 1: the sibling of the parent_node is black.
+		__restructure(grand_parent, parent, node);
+	} else {
+		// case 2: the sibling of the parent_node is red.
+		__recolor(grand_parent, parent_node, sibling);
+	}
 }
 
 /*
@@ -120,8 +140,8 @@ void RBTree<Key,Value>::insert(const Key& key, const Value& val)
 	new_node->entry = new_entry;
 	__insert(new_node);
 
-	// check and resolve double red if it has occured due to
-	// the newly inserted node.
+	// check and resolve double red internal property violation
+	// if it has occured due to the newly inserted node.
 	auto parent_node = (node->parent).lock();
 	if (parent_node->is_red)
 		__resolve_double_red(parent_node, new_node);
