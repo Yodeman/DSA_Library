@@ -6,6 +6,9 @@
 #include <memory>
 #include "iterator.hpp"
 
+/*
+ * Every external nodes i.e. null pointers are black nodes.
+*/ 
 template<std::totally_ordered Key, typename Value>
 struct RBTreeNode{
 	std::pair<Key,Value> entry{};
@@ -63,7 +66,7 @@ RBTree<Key,Value>::RBTree() : sz{0} {
 
 /*
  * restructures the position of nodes in the tree using the tri-node
- * restructuring algorith,
+ * restructuring algorithm,
 */
 template<std::totally_ordered Key, typename Value>
 void RBTree<Key,Value>::__restructure(
@@ -201,7 +204,9 @@ void RBTree<Key,Value>::__resolve_double_black(
 	auto sibling = (node == parent_node->right_child) ? parent_node->left_child : parent_node->right_child;
 
 	// case 1: sibling of node is black and has a red child
-	if (sibling && !(sibling->is_red)) {
+	if ((sibling && !(sibling->is_red)) &&\
+			((sibling->left_child && sibling->left_childe->is_red) ||\
+			 (sibling->right_child && sibling->right_child->is_red))) {
 		std::shared_ptr<RBTree<Key,Value>::node_type> red_child = nullptr;
 		if (sibling->left_child && sibling->left_child->isred) {
 			red_child = sibling->left_child;
