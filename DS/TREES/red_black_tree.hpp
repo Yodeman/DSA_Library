@@ -383,4 +383,32 @@ void RBTree<Key,Value>::remove(const Key& key)
 	throw std::runtime_error("entry with the specified key doesn't exists!!!");
 }
 
+template<std::totally_ordered Key, typename Value>
+typename RBTree<Key,Value>::iterator RBTree<Key,Value>::find(const Key& key)
+{
+	auto node = __search(root_node, key);
+	if (!node)
+		return end();
+	RBTree<Key,Value>::iterator iter(node);
+	return iter;
+}
+
+template<std::totally_ordered Key, typename Value>
+typename RBTree<Key,Value>::iterator RBTree<Key,Value>::begin()
+{
+	auto node = root_node;
+	// the first element is the left-most node in the tree.
+	while(node->left_child)
+		node = node->left_child;
+	RBTree<Key,Value>::iterator iter(node);
+	return iter;
+}
+
+template<std::totally_ordered Key, typename Value>
+typename RBTree<Key,Value>::iterator RBTree<Key,Value>::end()
+{
+	RBTree<Key,Value>::iterator iter(super_root_node);
+	return iter;
+}
+
 #endif //MY_RB_TREE
