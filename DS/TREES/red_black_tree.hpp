@@ -153,16 +153,12 @@ void RBTree<Key,Value>::__recolor(
 			bool is_double_red_violation
 		)
 {
-	if (parent_node == root_node) {
-		parent_node->is_red = false;
-		return;
-	}
-
 	auto grandparent_node = (parent_node->parent).lock();
 
 	if (is_double_red_violation) {
 		node->is_red = false;
 		sibling->is_red = false;
+		if (parent_node == root_node) return;
 		parent_node->is_red  = true;
 
 		// resolve double red internal property violation
@@ -173,6 +169,7 @@ void RBTree<Key,Value>::__recolor(
 		if (node)
 			node->is_red = false;
 		sibling->is_red = true;
+		if (parent_node == root_node) return;
 		if (parent_node->is_red) {
 			parent_node->is_red = false;
 		} else {
