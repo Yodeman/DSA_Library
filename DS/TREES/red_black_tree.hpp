@@ -109,6 +109,7 @@ void RBTree<Key,Value>::__restructure(
 
 	// restructure the nodes and the subtrees.
 	b->parent = (grandparent_node->parent).lock();
+	if ((b->parent).lock() == super_root_node) root_node = b;
 	if (grandparent_node == ((grandparent_node->parent).lock())->right_child) {
 		((grandparent_node->parent).lock())->right_child = b;
 	} else {
