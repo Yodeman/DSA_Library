@@ -11,7 +11,7 @@
 */ 
 template<std::totally_ordered Key, typename Value>
 struct RBTreeNode{
-	std::pair<Key,Value> entry{};
+	std::pair<Key,Value> elem{};
 	std::shared_ptr<RBTreeNode<Key,Value>> left_child = nullptr;
 	std::shared_ptr<RBTreeNode<Key,Value>> right_child = nullptr;
 	std::weak_ptr<RBTreeNode<Key,Value>> parent;
@@ -32,12 +32,13 @@ class RBTree{
 
 		void insert(const Key&, const Value&);
 		void remove(const Key&);
+		void remove(iterator&);
 		iterator find(const Key&);
 		iterator begin();
 		iterator end();
 
 	protected:
-		using node_type = std::shared_ptr<RBTreeNode<Key,Value>>;
+		using node_type = RBTreeNode<Key,Value>;
 		void __insert(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 		std::shared_ptr<node_type>& __search(std::shared_ptr<node_type>&, const Key&);
 		void __resolve_double_red(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
@@ -53,7 +54,7 @@ class RBTree{
 	private:
 		size_t sz;
 		// added super root node to aid the implementation of the iterator.
-		node_type root_node, super_root_node;
+		std::shared_ptr<node_type> root_node, super_root_node;
 };
 
 template<std::totally_ordered Key, typename Value>
@@ -128,7 +129,7 @@ void RBTree<Key,Value>::__restructure(
 
 	a->parent = b;
 	c->parent = b;
-	a->left_chile = T0;
+	a->left_child = T0;
 	if (T0) T0->parent = a;
 	a->right_child = T1;
 	if (T1) T1->parent = a;
@@ -152,7 +153,7 @@ void RBTree<Key,Value>::__recolor(
 			bool is_double_red_violation
 		)
 {
-	if ((parent_node == root_node) || ()) {
+	if (parent_node == root_node) {
 		parent_node->is_red = false;
 		return;
 	}
@@ -190,7 +191,7 @@ void RBTree<Key,Value>::__resolve_double_red(
 	auto sibling = (grand_parent->right_child == parent_node) ? grand_parent->left_child : grand_parent->right_child;
 	if (!sibling || !(sibling->is_red)) {
 		// case 1: the sibling of the parent_node is black.
-		__restructure(grand_parent, parent, node, true);
+		__restructure(grand_parent, parent_node, node, true);
 	} else {
 		// case 2: the sibling of the parent_node is red.
 		__recolor(grand_parent, parent_node, sibling, true);
@@ -207,7 +208,7 @@ void RBTree<Key,Value>::__resolve_double_black(
 
 	// case 1: sibling of node is black and has a red child
 	if ((sibling && !(sibling->is_red)) &&\
-			((sibling->left_child && sibling->left_childe->is_red) ||\
+			((sibling->left_child && sibling->left_child->is_red) ||\
 			 (sibling->right_child && sibling->right_child->is_red))) {
 		std::shared_ptr<RBTree<Key,Value>::node_type> red_child = nullptr;
 		if (sibling->left_child && sibling->left_child->is_red) {
@@ -242,15 +243,15 @@ void RBTree<Key,Value>::__resolve_double_black(
  * algorithm.
 */ 
 template<std::totally_ordered Key, typename Value>
-std::shared_ptr< typename RBTree<Key,Value>::node_type>& __search(
+std::shared_ptr<typename RBTree<Key,Value>::node_type>& RBTree<Key,Value>::__search(
 			std::shared_ptr<RBTree<Key,Value>::node_type>& node,
 			const Key& key
 		)
 {
 	if(node) {
-		if (key < (node->entry).first) {
+		if (key < (node->elem).first) {
 			return __search(node->left_child, key);
-		} else if (key > (node->entry).first) {
+		} else if (key > (node->elem).first) {
 			return __search(node->right_child, key);
 		}
 		return node;
@@ -265,19 +266,19 @@ std::shared_ptr< typename RBTree<Key,Value>::node_type>& __search(
 */
 template<std::totally_ordered Key, typename Value>
 void RBTree<Key,Value>::__insert(
-			std::shared_ptr<RBTree<Key,Value>::node_type> parent_node,
-			std::shared_ptr<RBTree<Key,Value>::node_type> new_node
+			std::shared_ptr<RBTree<Key,Value>::node_type>& parent_node,
+			std::shared_ptr<RBTree<Key,Value>::node_type>& new_node
 		)
 {
-	if((parent_node->entry).first == (new_node->entry).first) {
-		(parent_node->entry).second = (new_node->entry).second;
-		return;
-	} else if ((parent_node->entry).first < (new_node->entry).first) {
+	if((parent_node->elem).first == (new_node->elem).first) {
+		(parent_node->elem).second = (new_node->elem).second;
+		return false;
+	} else if ((parent_node->elem).first > (new_node->elem).first) {
 		if (!(parent_node->left_child)) {
 			parent_node->left_child = new_node;
 			new_node->parent = parent_node;
 			++sz;
-			return;
+			return true;
 		}
 		return __insert(parent_node->left_child, new_node);
 	} else {
@@ -285,7 +286,7 @@ void RBTree<Key,Value>::__insert(
 			parent_node->right_child = new_node;
 			new_node->parent = parent_node;
 			++sz;
-			return;
+			return true;
 		}
 		return __insert(parent_node->right_child, new_node);
 	}
@@ -296,18 +297,18 @@ void RBTree<Key,Value>::insert(const Key& key, const Value& val)
 {
 	std::pair<Key,Value> new_entry {key, val};
 	if (sz==0) {
-		root_node->entry = new_entry;
+		root_node->elem = new_entry;
 		root_node->is_red = false;
 		++sz;
 		return;
 	}
 	auto new_node = std::make_shared<RBTree<Key,Value>::node_type>();
-	new_node->entry = new_entry;
-	__insert(new_node);
+	new_node->elem = new_entry;
+	__insert(root_node, new_node);
 
 	// check and resolve double red internal property violation
 	// if it has occured due to the newly inserted node.
-	auto parent_node = (node->parent).lock();
+	auto parent_node = (new_node->parent).lock();
 	if (parent_node->is_red)
 		__resolve_double_red(parent_node, new_node);
 }
@@ -325,7 +326,7 @@ void RBTree<Key,Value>::remove(const Key& key)
 			auto child = node->right_child;
 			while(child->left_child)
 				child = child->left_child;
-			node->entry = child->entry;
+			node->elem = child->elem;
 
 			// if the child node has a right child, move the right child up to occupy
 			// the position of the about to be deleted child node.
@@ -390,6 +391,14 @@ void RBTree<Key,Value>::remove(const Key& key)
 		}
 	}
 	throw std::runtime_error("entry with the specified key doesn't exists!!!");
+}
+
+template<std::totally_ordered Key, typename Value>
+void RBTree<Key,Value>::remove(RBTree<Key,Value>::iterator& iter)
+{
+	RBTree<Key,Value>::key_type k = (*iter).first;
+	++iter;
+	remove(k);
 }
 
 template<std::totally_ordered Key, typename Value>
