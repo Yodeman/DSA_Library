@@ -39,7 +39,7 @@ class RBTree{
 
 	protected:
 		using node_type = RBTreeNode<Key,Value>;
-		void __insert(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
+		bool __insert(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 		std::shared_ptr<node_type>& __search(std::shared_ptr<node_type>&, const Key&);
 		void __resolve_double_red(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 		void __resolve_double_black(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
@@ -262,10 +262,11 @@ std::shared_ptr<typename RBTree<Key,Value>::node_type>& RBTree<Key,Value>::__sea
 /*
  * Inserts a new node into the tree, if the tree contains a node
  * with same key as the new node, it updates the existing node's
- * value with the new one.
+ * value with the new one. returns a boolean to trigger
+ * resolve_double_red violation if it has occured due to insertion.
 */
 template<std::totally_ordered Key, typename Value>
-void RBTree<Key,Value>::__insert(
+bool RBTree<Key,Value>::__insert(
 			std::shared_ptr<RBTree<Key,Value>::node_type>& parent_node,
 			std::shared_ptr<RBTree<Key,Value>::node_type>& new_node
 		)
@@ -304,12 +305,12 @@ void RBTree<Key,Value>::insert(const Key& key, const Value& val)
 	}
 	auto new_node = std::make_shared<RBTree<Key,Value>::node_type>();
 	new_node->elem = new_entry;
-	__insert(root_node, new_node);
+	bool was_inserted = __insert(root_node, new_node);
 
 	// check and resolve double red internal property violation
 	// if it has occured due to the newly inserted node.
 	auto parent_node = (new_node->parent).lock();
-	if (parent_node->is_red)
+	if (was_inserted && parent_node->is_red)
 		__resolve_double_red(parent_node, new_node);
 }
 
