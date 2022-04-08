@@ -113,7 +113,7 @@ void RBTree<Key,Value>::__restructure(
 	if (grandparent_node == ((grandparent_node->parent).lock())->right_child) {
 		((grandparent_node->parent).lock())->right_child = b;
 	} else {
-		((grandparent_node->parent).lock())->left_child = a;
+		((grandparent_node->parent).lock())->left_child = b;
 	}
 	b->right_child = c;
 	b->left_child = a;
