@@ -39,8 +39,14 @@ class RBTree{
 		std::shared_ptr<node_type>& __search(std::shared_ptr<node_type>&, const Key&);
 		void __resolve_double_red(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
 		void __resolve_double_black(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
-		void __restructure(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
-		void __recolor(std::shared_ptr<node_type>&, std::shared_ptr<node_type>&, std::shared_ptr<node_type>&);
+		void __restructure(
+					std::shared_ptr<node_type>&, std::shared_ptr<node_type>&, std::shared_ptr<node_type>&,
+					bool is_double_red_violation
+				);
+		void __recolor(
+					std::shared_ptr<node_type>&, std::shared_ptr<node_type>&, std::shared_ptr<node_type>&,
+					bool is_double_red_violation
+				);
 	private:
 		size_t sz;
 		// added super root node to aid the implementation of the iterator.
@@ -63,7 +69,8 @@ template<std::totally_ordered Key, typename Value>
 void RBTree<Key,Value>::__restructure(
 			std::shared_ptr<RBTree<Key,Value>::node_type>& grandparent_node,
 			std::shared_ptr<RBTree<Key,Value>::node_type>& parent_node,
-			std::shared_ptr<RBTree<Key,Value>::node_type>& node
+			std::shared_ptr<RBTree<Key,Value>::node_type>& node,
+			bool is_double_red_violation
 		)
 {
 	std::shared_ptr<RBTree<Key,Value>::node_type> a, b, c, T0, T1, T2, T3;
@@ -106,9 +113,15 @@ void RBTree<Key,Value>::__restructure(
 	b->right_child = c;
 	b->left_child = a;
 
-	b->is_red = false;
-	a->is_red = true;
-	c->is_red = true;
+	if (is_double_red_violation) {
+		b->is_red = false;
+		a->is_red = true;
+		c->is_red = true;
+	} else {
+		a->is_red = false;
+		c->is_red = false;
+		b->is_red = grandparent_node->is_red;
+	}
 
 	a->parent = b;
 	c->parent = b;
@@ -132,20 +145,34 @@ template<std::totally_ordered Key, typename Value>
 void RBTree<Key,Value>::__recolor(
 			std::shared_ptr<RBTree<Key,Value>::node_type>& parent_node,
 			std::shared_ptr<RBTree<Key,Value>::node_type>& node,
-			std::shared_ptr<RBTree<Key,Value>::node_type>& sibling
+			std::shared_ptr<RBTree<Key,Value>::node_type>& sibling,
+			bool is_double_red_violation
 		)
 {
 	if ((parent_node == root_node) || ())
 		return;
-	node->is_red = false;
-	sibling->is_red = false;
-	parent_node->is_red  = true;
 
-	// resolve double red internal property violation
-	// if it has occured due to recoloring
 	auto grandparent_node = (parent_node->parent).lock();
-	if ((grandparent_node->is_red) && (parent_node->is_red))
-		__resolve_double_red(grandparent_node, parent_node);
+
+	if (is_double_red_violation) {
+		node->is_red = false;
+		sibling->is_red = false;
+		parent_node->is_red  = true;
+
+		// resolve double red internal property violation
+		// if it has occured due to recoloring
+		if ((grandparent_node->is_red) && (parent_node->is_red))
+			__resolve_double_red(grandparent_node, parent_node);
+	} else {
+		if (node)
+			node->is_red = false;
+		sibling->is_red = true;
+		if (parent_node->is_red) {
+			parent_node->is_red = false;
+		} else {
+			__resolve_double_black(grandparent_node, parent_node);
+		}
+	}
 }
 
 template<std::totally_ordered Key, typename Value>
@@ -156,12 +183,48 @@ void RBTree<Key,Value>::__resolve_double_red(
 {
 	auto grand_parent = (parent_node->parent).lock();
 	auto sibling = (grand_parent->right_child == parent_node) ? grand_parent->left_child : grand_parent->right_child;
-	if (!(sibling->is_red)) {
+	if (!sibling || !(sibling->is_red)) {
 		// case 1: the sibling of the parent_node is black.
-		__restructure(grand_parent, parent, node);
+		__restructure(grand_parent, parent, node, true);
 	} else {
 		// case 2: the sibling of the parent_node is red.
-		__recolor(grand_parent, parent_node, sibling);
+		__recolor(grand_parent, parent_node, sibling, true);
+	}
+}
+
+template<std::totally_ordered Key, typename Value>
+void RBTree<Key,Value>::__resolve_double_black(
+			std::shared_ptr<RBTree<Key,Value>::node_type>& parent_node,
+			std::shared_ptr<RBTree<Key,Value>::node_type>& node
+		)
+{
+	auto sibling = (node == parent_node->right_child) ? parent_node->left_child : parent_node->right_child;
+
+	// case 1: sibling of node is black and has a red child
+	if (sibling && !(sibling->is_red)) {
+		std::shared_ptr<RBTree<Key,Value>::node_type> red_child = nullptr;
+		if (sibling->left_child && sibling->left_child->isred) {
+			red_child = sibling->left_child;
+		} else {
+			red_child = sibling->right_child;
+		}
+		__restructure(parent_node, sibling, red_child, false);
+		if (node)
+			node->is_red = false;
+		return;
+	} else if(!sibling || !(sibling->is_red)) {
+		// case 2: sibling of node is black and its children are black
+		__recolor(parent_node, node, sibling, false);
+	} else if (sibling && siblin->is_red){
+		// dase 3: execute readjustment if sibling of node is a red node,
+		auto sibling_child = (sibling == parent_node->left_child) ? sibling->left_child : sibling->right_child;
+		bool sibling_child_color = !sibling_child ? false : sibling_child->is_red;
+		__restructure(parent_node, sibling, sibling_child, false);
+		sibling->is_red = false;
+		parent_node->is_red = true;
+		if (sibling_child)
+			sibling_child->is_red = sibling_child_color;
+		__resolve_double_black(parent_node, node);
 	}
 }
 
@@ -273,7 +336,9 @@ void RBTree<Key,Value>::remove(const Key& key)
 					__resolve_double_black(child_parent, child_right_child);
 				}
 			} else {
-				(((child->parent).lock())->right_child).reset();
+				(child_parent->right_child).reset();
+				if (!(child->is_red))
+					__resolve_double_black(child_parent, child_right_child);
 			}
 			(child->right_child).reset();
 			(child->right_child).reset();
@@ -305,6 +370,8 @@ void RBTree<Key,Value>::remove(const Key& key)
 				} else {
 					parent_node->right_child = nullptr;
 				}
+				if (!(node->is_red))
+					__resolve_double_black(parent_node, child);
 			}
 			(node->left_child).reset();
 			(node->right_child).reset();
