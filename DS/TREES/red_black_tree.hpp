@@ -224,7 +224,7 @@ void RBTree<Key,Value>::__resolve_double_black(
 			 ((sibling && (sibling->right_child && !(sibling->right_child->is_red)))))) {
 		// case 2: sibling of node is black and its children are black
 		__recolor(parent_node, node, sibling, false);
-	} else if (sibling && siblin->is_red){
+	} else if (sibling && sibling->is_red){
 		// dase 3: execute readjustment if sibling of node is a red node,
 		auto sibling_child = (sibling == parent_node->left_child) ? sibling->left_child : sibling->right_child;
 		bool sibling_child_color = !sibling_child ? false : sibling_child->is_red;
