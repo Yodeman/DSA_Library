@@ -210,7 +210,7 @@ void RBTree<Key,Value>::__resolve_double_black(
 			((sibling->left_child && sibling->left_childe->is_red) ||\
 			 (sibling->right_child && sibling->right_child->is_red))) {
 		std::shared_ptr<RBTree<Key,Value>::node_type> red_child = nullptr;
-		if (sibling->left_child && sibling->left_child->isred) {
+		if (sibling->left_child && sibling->left_child->is_red) {
 			red_child = sibling->left_child;
 		} else {
 			red_child = sibling->right_child;
