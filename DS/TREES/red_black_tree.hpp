@@ -396,7 +396,7 @@ template<std::totally_ordered Key, typename Value>
 void RBTree<Key,Value>::remove(RBTree<Key,Value>::iterator& iter)
 {
 	if (iter == end())
-		throw runtime_error("removal of end iterator is undefined!!!");
+		throw std::runtime_error("removal of end iterator is undefined!!!");
 	RBTree<Key,Value>::key_type k = (*iter).first;
 	++iter;
 	remove(k);
