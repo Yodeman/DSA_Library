@@ -204,25 +204,25 @@ void RBTree<Key,Value>::__resolve_double_black(
 {
 	auto sibling = (node == parent_node->right_child) ? parent_node->left_child : parent_node->right_child;
 
-	// case 1: sibling of node is black and has a red child
-	if ((sibling && !(sibling->is_red)) &&\
-			((sibling->left_child && sibling->left_child->is_red) ||\
-			 (sibling->right_child && sibling->right_child->is_red))) {
-		std::shared_ptr<RBTree<Key,Value>::node_type> red_child = nullptr;
-		if (sibling->left_child && sibling->left_child->is_red) {
-			red_child = sibling->left_child;
-		} else {
-			red_child = sibling->right_child;
+	if (sibling && !(sibling->is_red)) {
+		// case 1: sibling of node is black and has a red child
+		if(((sibling->left_child && sibling->left_child->is_red) ||\
+			(sibling->right_child && sibling->right_child->is_red))) {
+			std::shared_ptr<RBTree<Key,Value>::node_type> red_child = nullptr;
+			if (sibling->left_child && sibling->left_child->is_red) {
+				red_child = sibling->left_child;
+			} else {
+				red_child = sibling->right_child;
+			}
+			__restructure(parent_node, sibling, red_child, false);
+			if (node)
+				node->is_red = false;
+			return;
+		} else if((sibling && (sibling->left_child && !(sibling->left_child->is_red))) &&\
+				(sibling && (sibling->right_child && !(sibling->right_child->is_red)))) {
+			// case 2: sibling of node is black and its children are black
+			__recolor(parent_node, node, sibling, false);
 		}
-		__restructure(parent_node, sibling, red_child, false);
-		if (node)
-			node->is_red = false;
-		return;
-	} else if((!sibling || !(sibling->is_red)) &&\
-			((sibling && (sibling->left_child && !(sibling->left_child->is_red))) &&\
-			 ((sibling && (sibling->right_child && !(sibling->right_child->is_red)))))) {
-		// case 2: sibling of node is black and its children are black
-		__recolor(parent_node, node, sibling, false);
 	} else if (sibling && sibling->is_red){
 		// case 3: execute readjustment if sibling of node is a red node,
 		auto sibling_child = (sibling == parent_node->left_child) ? sibling->left_child : sibling->right_child;
