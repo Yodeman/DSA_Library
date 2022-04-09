@@ -123,9 +123,9 @@ void RBTree<Key,Value>::__restructure(
 		a->is_red = true;
 		c->is_red = true;
 	} else {
+		b->is_red = grandparent_node->is_red;
 		a->is_red = false;
 		c->is_red = false;
-		b->is_red = grandparent_node->is_red;
 	}
 
 	a->parent = b;
