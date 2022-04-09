@@ -355,7 +355,7 @@ void RBTree<Key,Value>::remove(const Key& key)
 			child.reset();
 			--sz;
 			return;
-		} else if ((node->left_child == nullptr) || (node->left_child == nullptr)) {
+		} else if ((node->left_child == nullptr) || (node->right_child == nullptr)) {
 			// either of the children of the about to be deleted node is an internal
 			// node, move the child (the internal node) to occupy its parent position.
 			auto child = (node->left_child == nullptr) ? node->right_child : node->left_child;
