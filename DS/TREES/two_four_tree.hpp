@@ -1,6 +1,6 @@
 #ifndef MY_TWO_FOUR_TREE
 #define MY_TWO_FOUR_TREE
-
+#error "work in progress"
 #include <iostream>
 #include <concepts>
 #include <valarray>
