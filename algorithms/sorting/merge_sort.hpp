@@ -52,15 +52,29 @@ void merge_sort(
 			Compare comp = {}
 		)
 {
-	size_t sz = std::ranges::size(C);
+	//size_t sz = std::ranges::size(C);
+	//size_t sz = std::ranges::end(C) - std::ranges::begin(C);
+	size_t sz = std::ranges::distance(C.begin(), C.end());
 	if (sz == 1) return;
 	size_t n = sz / 2;
+	size_t i = 0;
 	std::vector<Elem_type> s1(n);
 	s1.shrink_to_fit();
+	auto iter1 = s1.begin();
 	std::vector<Elem_type> s2(sz-n);
 	s2.shrink_to_fit();
-	std::ranges::copy(std::ranges::subrange(C.begin(), C.begin()+n), s1.begin());
-	std::ranges::copy(std::ranges::subrange(C.begin()+n, C.end()), s2.begin());
+	auto iter2 = s2.begin();
+	for (auto c_iter=C.begin(); c_iter!=C.end(); ++c_iter, ++i) {
+		if (i>=n) {
+			*iter2 = *c_iter;
+			++iter2;
+		} else {
+			*iter1 = *c_iter;
+			++iter1;
+		}
+	}
+	//std::ranges::copy(std::ranges::subrange(C.begin(), C.begin()+n), s1.begin());
+	//std::ranges::copy(std::ranges::subrange(C.begin()+n, C.end()), s2.begin());
 	merge_sort(s1, comp);
 	merge_sort(s2, comp);
 	my_merge(s1, s2, C.begin(), comp);
