@@ -8,8 +8,8 @@ template<typename Container>
 concept sort_requirement = std::ranges::range<Container> &&\
 						   std::totally_ordered<Container::value_type>
 
-template<sort_requirement Container, std::predicate Compare>
-void merge_sort(Container C, Compare func)
+template<sort_requirement Container, std::predicate Compare=std::less<Container::value_type>>
+void merge_sort(Container C, Compare comp)
 {
 	// pass...
 }
