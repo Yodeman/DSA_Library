@@ -1,14 +1,7 @@
 #ifndef MY_MERGE_SORT
 #define MY_MERGE_SORT
 
-#include <iostream>
-#include <iterator>
-#include <ranges>
-#include <cmath>
-
-template<typename Container>
-concept sort_requirement = std::ranges::range<Container> &&\
-						   std::totally_ordered<std::ranges::range_value_t<Container>>;
+#include "algorithms_concept.hpp"
 
 template<
 		sort_requirement Container,
@@ -53,7 +46,6 @@ void merge_sort(
 		)
 {
 	//size_t sz = std::ranges::size(C);
-	//size_t sz = std::ranges::end(C) - std::ranges::begin(C);
 	size_t sz = std::ranges::distance(C.begin(), C.end());
 	if (sz == 1) return;
 	size_t n = sz / 2;
