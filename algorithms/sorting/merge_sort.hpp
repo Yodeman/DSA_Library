@@ -5,7 +5,7 @@
 
 template<
 		sort_requirement Container,
-		std::forward_iterator Iter,
+		iterator_requirement Iter,
 		typename Compare = std::less<std::ranges::range_value_t<Container>>
 	>
 void my_merge(Container& C1, Container& C2, Iter O, Compare comp = {})
