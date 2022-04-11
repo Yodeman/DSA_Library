@@ -12,4 +12,8 @@ concept sort_requirement = std::ranges::range<Container> &&\
 template<typename Iter>
 concept iterator_requirement = std::output_iterator<Iter,std::iter_value_t<Iter>>;
 
+template<typename Iter>
+concept iterator_requirement2 = std::output_iterator<Iter,std::iter_value_t<Iter>>\
+								&& std::random_access_iterator<Iter>
+
 #endif // MY_ALGORITHM_CONCEPT
