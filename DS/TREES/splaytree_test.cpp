@@ -49,7 +49,6 @@ void splaytree_test2()
     s.insert(std::make_pair<std::string, int>("Emmanuel", 10));
     s.insert(std::make_pair<std::string, int>("Nathaniel", 20));
     s.insert(std::make_pair<std::string, int>("Paul", 21));
-    std::cout << s.size() << std::endl;
 
 	std::cout << "size: " << s.size() << std::endl;
 

@@ -137,7 +137,7 @@ void SkipList<T>::insert(const T& elem)
 						 // the costly linear traversal of nodes at level 1
 
 	for(auto k= maxLevel; k > 0; --k) {
-		if (!was_set)
+		if (!was_set) {
 			node_before = heads[k-1];
 			// If node_before is the immediate node at the current
 			// level in the heads array, check if it is greater
@@ -149,8 +149,9 @@ void SkipList<T>::insert(const T& elem)
 					heads[k-1] = new_node;
 				}
 			}
+		}
 		// Make the newly inserted level point to the new node
-		// if new level were inserted to the heads array.
+		// if new level was inserted to the heads array.
 		if (!node_before) {
 			heads[k-1] = new_node;
 		}
