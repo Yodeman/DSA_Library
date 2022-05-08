@@ -17,36 +17,40 @@
 #include <type_traits>
 
 template<
-			typename Container,
-			typename T1=std::tuple_element<0, Container::value_type>,
-			typename T2=std::tuple_element<1, Container::value_type>
-		>
-concept bucket_sort_requirement = std::output_range<Container::iterator> && std::is_same_v<int, T1> &&\
-								  std::is_same_v<std::pair<T1,T2>, Container::value_type> &&\
-								  std::totally_ordered<T1> && std::totally_ordered<T2>;
+            typename Container,
+            typename T1 = typename std::tuple_element<0, typename Container::value_type>::type,
+            typename T2= typename std::tuple_element<1, typename Container::value_type>::type
+        >
+concept bucket_sort_requirement = std::input_or_output_iterator<typename Container::iterator> &&\
+                                  std::is_same_v<int, T1> &&\
+                                  std::is_same_v<std::pair<T1,T2>, typename Container::value_type>;
 
 template<
-			bucket_sort_requirement Container,
-			size_t N=1001
-		>
+            bucket_sort_requirement Container,
+            size_t N=1001
+        >
 void bucket_sort(Container& C)
 {
-	auto max_elem = std::max_element(C.begin(), C.end());
-	if (max_elem.first > N)
-		std::throw runtime_error("sequence contains key larger than allowed range.");
+    auto max_elem = std::max_element(C.begin(), C.end());
+    if ((*max_elem).first > N)
+        throw std::runtime_error("sequence contains key larger than allowed range.");
 
-	std::vector<std::vector<Container::value_type>> bucket(N);
+    std::vector<std::vector<typename Container::value_type>> bucket(N);
+    bucket.shrink_to_fit();
 
-	for (auto e : C) {
-		bucket.at(e.first).push_back(e);
-	}
+    for (auto e : C) {
+        bucket.at(e.first).push_back(e);
+    }
 
-	for (size_t i{0}, Container::iterator d = C.begin(); i < N; ++i) {
-		for (auto e = bucket[i].begin(); e != bucket[i].end(); ++e) {
-			*d = *e;
-			++d;
-		}
-	}
+    auto iter = C.begin();
+
+    for (size_t i{0}; i < N; ++i) {
+        bucket[i].shrink_to_fit();
+        for (auto e = bucket[i].begin(); e != bucket[i].end(); ++e) {
+            *iter = *e;
+            ++iter;
+        }
+    }
 }
 
 #endif //MY_BUCKET_SORT
