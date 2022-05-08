@@ -8,39 +8,45 @@
 
 #include <iostream>
 #include <concepts>
+#include <cassert>
 #include "../sorting/quick_sort.hpp"
 
 template<typename Container>
-concept quick_select_requirement = std::input_or_output_iterator<Container::iterator> &&\
-								   std::totally_ordered<Container::value_type>;
+concept quick_select_requirement = std::input_or_output_iterator<typename Container::iterator> &&\
+								   std::totally_ordered<typename Container::value_type>;
 
 template<
 			quick_select_requirement Container,
-			typename T=Container::value_type
+			typename T= typename Container::value_type
 		>
 T quick_select (Container& C, size_t K)
 {
 	auto size = std::distance(C.begin(), C.end());
+	if (K > size)
+		throw std::runtime_error("K is greater than sequence length!!!");
 
 	if (size <= 10) {
 		quick_sort(C);
-		return C[K-1];
+		return C.at(K-1);
 	}
 
-	std::vector<T> medians(size/5);
+	std::vector<T> medians;
+	medians.reserve(size/5);
 	std::vector<T> less;
 	std::vector<T> greater;
 	std::array<T, 5> subset;
+	size_t idx{0};
 
-	for (size_t idx{0}, auto iter=C.begin(); iter!=C.end(); ++iter) {
+	for (auto iter=C.begin(); iter!=C.end(); ++iter) {
 		subset.at(idx) = *iter;
-		if (((idx+1) % 5 == 0)) {
+		++idx;
+		if ((idx % 5 == 0)) {
 			medians.push_back(quick_select(subset, 3));
 			idx = 0;
 		}
 	}
 
-	auto pivot = quick_select(medians, size/10);
+	T pivot = quick_select(medians, size/10);
 
 	for (auto iter=C.begin(); iter != C.end(); ++iter) {
 		if ((*iter) < pivot) {
@@ -49,6 +55,10 @@ T quick_select (Container& C, size_t K)
 			greater.push_back(*iter);
 		}
 	}
+
+	less.shrink_to_fit();
+	greater.shrink_to_fit();
+
 	if (K== less.size()) {
 		return pivot;
 	}
@@ -59,6 +69,5 @@ T quick_select (Container& C, size_t K)
 		return quick_select(greater, K-less.size());
 	}
 }
-
 
 #endif // MY_QUICK_SELECT
