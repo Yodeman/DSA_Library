@@ -16,9 +16,9 @@ concept quick_select_requirement = std::input_or_output_iterator<typename Contai
 								   std::totally_ordered<typename Container::value_type>;
 
 template<
-			quick_select_requirement Container,
-			typename T= typename Container::value_type
-		>
+            quick_select_requirement Container,
+            typename T= typename Container::value_type
+        >
 T quick_select (Container& C, size_t K)
 {
 	auto size = std::distance(C.begin(), C.end());
