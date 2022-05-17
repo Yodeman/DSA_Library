@@ -1,5 +1,5 @@
 /*
- * Implementation of Boyer-More pattern matching algorithm.
+ * Implementation of Boyer-Moore pattern matching algorithm.
 */
 
 #include <iostream>
@@ -20,7 +20,7 @@ std::unordered_map<char, uint8_t> last_occur(const std::string_view& pattern)
     return l;
 }
 
-std::vector<uint8_t> boyer_more_match(const std::string_view& text, const std::string_view& pattern)
+std::vector<uint8_t> boyer_moore_match(const std::string_view& text, const std::string_view& pattern)
 {
     std::vector<uint8_t> indices;
     std::unordered_map<char, uint8_t> last = last_occur(pattern);
@@ -53,7 +53,7 @@ int main()
 {
     constexpr std::string_view pattern{"oom"};
     constexpr std::string_view text{"boomzoomloomfoammoondoomgloomroom"};
-    std::vector<uint8_t> idxs = boyer_more_match(text, pattern);
+    std::vector<uint8_t> idxs = boyer_moore_match(text, pattern);
     for (auto i : idxs)
         std::cout << static_cast<size_t>(i) << " ";
     std::cout << std::endl;
