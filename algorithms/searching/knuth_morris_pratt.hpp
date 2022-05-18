@@ -1,5 +1,5 @@
-#ifndef MY_KNUTH_MORIS_PRATT
-#define MY_KNUTH_MORIS_PRATT
+#ifndef MY_KNUTH_MORRIS_PRATT
+#define MY_KNUTH_MORRIS_PRATT
 
 /*
  * Implementation of Hnuth-Morris-Pratt pattern matching
@@ -16,10 +16,10 @@
 
 #include <iostream>
 #include <fstream>
-#include <string>
+#include <string_view>
 #include <vector>
 
-std::vector<size_t> KMPFailure(const std::string& S)
+std::vector<size_t> KMPFailure(const std::string_view& S)
 {
     /*
      * Called by the main pattern matching function in order
@@ -54,11 +54,14 @@ std::vector<size_t> KMPFailure(const std::string& S)
     return lengths;
 }
 
-std::vector<size_t> KMP_pattern_match(const std::string& text, const std::string& pattern)
+std::vector<size_t> KMP_pattern_match(const std::string_view& text, const std::string_view& pattern)
 {
     std::vector<size_t> match_indices, lengths = KMPFailure(pattern);
     size_t i = 0, j = 0;
     size_t p_s = pattern.size() - 1;
+
+    if (text.empty() || pattern.empty())
+        return match_indices;
 
     while (i < text.size()) {
         if (text.at(i)==pattern.at(j)) {
@@ -84,4 +87,4 @@ std::vector<size_t> KMP_pattern_match(const std::string& text, const std::string
     return match_indices;
 }
 
-#endif //MY_KNUTH_MORIS_PRATT
+#endif //MY_KNUTH_MORRIS_PRATT
