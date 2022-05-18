@@ -23,13 +23,16 @@ std::unordered_map<char, uint8_t> last_occur(const std::string_view& pattern)
     return l;
 }
 
-std::vector<uint8_t> boyer_moore_match(const std::string_view& text, const std::string_view& pattern)
+std::vector<size_t> boyer_moore_match(const std::string_view& text, const std::string_view& pattern)
 {
-    std::vector<uint8_t> indices;
+    std::vector<size_t> indices;
     std::unordered_map<char, uint8_t> last = last_occur(pattern);
     size_t i, j, pattern_size, text_size;
     text_size = (text.size() - 1);
     i = j = pattern_size = (pattern.size() - 1);
+
+    if (text.empty() || pattern.empty())
+        return indices;
 
     while(i <= text_size) {
         if (pattern[j] == text[i]) {
