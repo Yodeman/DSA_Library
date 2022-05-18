@@ -1,3 +1,6 @@
+#ifndef MY_KNUTH_MORIS_PRATT
+#define MY_KNUTH_MORIS_PRATT
+
 /*
  * Implementation of Hnuth-Morris-Pratt pattern matching
  * algorihm. The algorithm icrementally process the text
@@ -81,32 +84,4 @@ std::vector<size_t> KMP_pattern_match(const std::string& text, const std::string
     return match_indices;
 }
 
-int main(int argc, char* argv[])
-{
-	std::string text, pattern;
-	if (argc < 3) {
-		std::cerr << "usage with large file: " << "knuth_morris_pratt.exe"
-		        << " path/to/text/file/  pattern" << std::endl;
-		std::cout << "Enter the text: ";
-		std::cin >> text;
-        std::cout << " Enter the pattern: ";
-        std::cin >> pattern;
-	}
-	else {
-		std::string fname = argv[1];
-		pattern = argv[2];
-		std::ifstream istrm(fname, std::ios::in);
-		if(!istrm.is_open()){
-			std::cerr << "failed to open " << fname << std::endl;
-			return -1;
-		}
-		for(std::string line; std::getline(istrm, line);)
-			text += line;
-	}
-
-	auto match_indices = KMP_pattern_match(text, pattern);
-	for(auto& elem: match_indices)
-		std::cout << elem << " ";
-    std::cout << std::endl;
-	return 0;
-}
+#endif //MY_KNUTH_MORIS_PRATT
